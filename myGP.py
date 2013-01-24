@@ -22,10 +22,10 @@ def getInputFile(filename):
     with open(filename,"r") as f:
         lines = f.readlines()
      
-    labels = [ l.strip() for l in lines[0].split(",") ]
+    labels = [ l.strip() for l in lines[0].split(",,,") ]
         
     for line in lines[1:]:
-        valuesTmp = [ value.strip() for value in line.split(",")]
+        valuesTmp = [ value.strip() for value in line.split(",,,")]
         values = [ float(v) for v in valuesTmp[1:]  ]
         values = [ valuesTmp[0] ] + values
         inputData.append(dict(zip(labels, values))) 

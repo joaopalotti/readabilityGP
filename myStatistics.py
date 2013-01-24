@@ -10,8 +10,6 @@ def main(argv):
     if len(argv) > 1:
         inFile = argv[1]
 
-    print inFile
-
     with open(inFile, "r") as f:
         data = f.readlines()
 
@@ -24,19 +22,15 @@ def divideByVector(data, vectorValues, *cols):
     newData = []
     firstCol = 0
     lastCol = len(vectorValues)
-    print "COLS = ", cols
 
     if len(cols) > 1:
         firstCol = cols[0]
         lastCol = cols[1]
     
-    print firstCol, lastCol
-
-
     for row in data[1:]:
         
-        name = row.split(",")[0:1]
-        numbers = ( [ float(n) for n in row.split(",")[1:] ] )
+        name = row.split(",,,")[0:1]
+        numbers = ( [ float(n) for n in row.split(",,,")[1:] ] )
         
         before = [ numbers[i] for i in range(0, firstCol) ]
         v = [ numbers[i]/vectorValues[i] for i in range(firstCol, lastCol) ]
@@ -45,17 +39,17 @@ def divideByVector(data, vectorValues, *cols):
         newData.append( name + before + v + after)
     
     for row in newData:
-        print row[0:1][0],
+        sys.stdout.write("%s" % row[0:1][0])
         for v in row[1:]:
-            print ",,," + str(v),
-        print 
+            sys.stdout.write(",,,%f" % v)
+        sys.stdout.write("\n")
 
 
 def calculateMeans(data):
 
     numbers = []
     for row in data[1:]:
-        numbers.append( [ float(n) for n in row.split(",")[1:] ] )
+        numbers.append( [ float(n) for n in row.split(",,,")[1:] ] )
         
     finalMean = [ sum(a)/len(numbers) for a in zip(*numbers) ]
 
@@ -66,7 +60,7 @@ def calculateMeans(data):
 def getOneColumn(data, col):
     values = []
     for row in data[1:]:
-        values.append( float(row.split(",")[col:col+1][0]) )
+        values.append( float(row.split(",,,")[col:col+1][0]) )
     return values
 
 
