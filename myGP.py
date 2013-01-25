@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import division
 import sys
 import random
 import operator
@@ -30,10 +31,11 @@ def getInputFile(filename):
         values = [ valuesTmp[0] ] + values
         inputData.append(dict(zip(labels, values))) 
             
+    return inputData
 
 def main(argv=None):
     
-    getInputFile("input")
+    getInputFile("input2")
     
     ## Create the fitness and individual classes
     # The second argument is the number of arguments used in the function
@@ -76,7 +78,8 @@ def main(argv=None):
 
         for test in inputData:
             
-            goal = test["fleschReadingEase"]
+            #goal = test["fleschReadingEase"]
+            goal = test["goal"]
 
             funcResult = func(test["numWords"],\
                            test["numSentences"],\
@@ -101,7 +104,7 @@ def main(argv=None):
 
     #here starts the algorithm
     random.seed(10)
-    pop = toolbox.population(n=400)
+    pop = toolbox.population(n=4000)
     hof = tools.HallOfFame(1)
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("avg", tools.mean)
@@ -109,7 +112,7 @@ def main(argv=None):
     stats.register("min", min)
     stats.register("max", max)
 
-    algorithms.eaSimple(pop, toolbox, 0.8, 0.1, 20, stats, halloffame=hof)
+    algorithms.eaSimple(pop, toolbox, 0.8, 0.1, 200, stats, halloffame=hof)
 
     #print pop, stats, hof
     print stats, hof
