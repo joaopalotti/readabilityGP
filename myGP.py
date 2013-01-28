@@ -92,7 +92,7 @@ def main(argv=None):
                            )
             error += abs( goal - funcResult )
         
-        fitness = error
+        fitness = error/len(inputData)
 
         return fitness,
 

@@ -58,6 +58,7 @@ class myHyphernator:
             
             except urllib2.HTTPError, e:
                     print ("HTTPERROR ===> ", e.code)
+                    print ("Word ... ===> ", word)
                     tries -= 1
         
             except urllib2.URLError, e:

@@ -3,10 +3,12 @@
 
 from __future__ import division
 import nltk
-import re
-import string
+import re, string, math
 from myHyphernator import myHyphernator
 from nltk import word_tokenize, wordpunct_tokenize
+from collections import Counter
+import nltk.data # to import "punkt"
+from nltk.tokenize.punkt import PunktWordTokenizer
 
 '''
 '''
@@ -23,6 +25,10 @@ class MyRegularText:
         self.__makeSentences()
         self.__makeWords()
         self.__myHyp = myHyphernator()
+        # Load daleChall Word list
+        with open("dale-challWordList.txt", "r") as d:
+            dWords = d.readlines()
+        self.__daleWords = [ w.strip() for w in dWords]
     
     def validDocument(self):
         return self.getNumberOfWords() > 0
@@ -57,6 +63,9 @@ class MyRegularText:
             del self.__tokens[t]
         print self.__tokens
 
+    def tokens(self):
+        return Counter( [w.lower() for w in self.__words  if w.isalpha()] )
+
     def words(self):
         return self.__words
 
@@ -73,10 +82,12 @@ class MyRegularText:
         self.__words = []
         for sen in range(len(self.__sentences)):
                 
-            allTokens = nltk.wordpunct_tokenize(self.__sentences[sen]) 
+            allTokens = PunktWordTokenizer().tokenize(self.__sentences[sen])
+            #allTokens = nltk.wordpunct_tokenize(self.__sentences[sen]) 
                     
-            #eliminate empty words 
-            tokens = [tok for tok in allTokens if tok]
+            #eliminate empty words and eliminate . from the final of words:
+            # Ex.:  This is the final. -> ['This', 'is', 'the', 'final.'] -> [...,'final']
+            tokens = [re.sub('\.', '', tok) for tok in allTokens if tok]
                     
             #TODO: improve this quick and dirt solution
             tokens2 = [tok for tok in allTokens if tok not in '.']
@@ -88,7 +99,8 @@ class MyRegularText:
             self.__sentences[sen] = tokens[:]
 
     def __makeSentences(self):
-        self.__sentences = self.__raw.split(".")
+        tokenizer = nltk.data.load('tokenizers/punkt/english.pickle')
+        self.__sentences = tokenizer.tokenize(self.__raw.strip())
  
     def getNumberOfSentences(self):
         return len(self.__sentences)
@@ -129,6 +141,7 @@ class MyRegularText:
         return 0.39 * ( self.getNumberOfWords() / self.getNumberOfSentences() ) + 11.8 * ( self.getNumberOfSyllables() / self.getNumberOfWords() ) - 15.59
 
     def getColemanLiauIndex(self):
+        # http://en.wikipedia.org/wiki/Coleman%E2%80%93Liau_index
         if self.getNumberOfSentences() == 0:
             return 0.0
         return ( 5.89 * self.getAvgWordLengthInChars() ) - ( 30.0 * ( self.getNumberOfSentences() / self.getNumberOfWords() ) ) -15.8
@@ -138,3 +151,30 @@ class MyRegularText:
             return 0.0
         longWords = len ( [ w for w in self.__words if len(w) >= 7 ] )
         return self.getNumberOfWords() / self.getNumberOfSentences() + ( (100.0 * longWords) / self.getNumberOfWords() )
+
+    def getNumberOfPolysyllableWords(self):
+        return len( [w for w in self.__words if w not in string.punctuation and self.__myHyp.numberOfSyllables(w) >= 3] )
+
+    def getGFI(self):
+        # http://en.wikipedia.org/wiki/Gunning_fog_index
+        return 0.4 * ( (self.getNumberOfWords() / self.getNumberOfSentences()) + 100 * ( self.getNumberOfPolysyllableWords() / self.getNumberOfWords()))
+                     
+    def getSMOG(self):
+        # http://en.wikipedia.org/wiki/SMOG
+        return 1.0430 * math.sqrt( self.getNumberOfPolysyllableWords() * 30 / self.getNumberOfSentences() ) + 3.1291
+
+    def getARI(self):
+        # http://en.wikipedia.org/wiki/Automated_Readability_Index 
+        return 4.71 * (self.getAvgWordLengthInChars()) + 0.5 * (self.getNumberOfWords()/self.getNumberOfSentences())- 21.43
+
+    def getNumberOfChars(self):
+        nonPunctationWords =  [len(w) for w in self.__words if w not in string.punctuation]
+        return sum(nonPunctationWords)
+    
+    def getNumberOfNDCDifficultWords(self):
+        return len( [w for w in self.__words if w not in string.punctuation and w not in self.__daleWords ] )
+
+    def getNDC(self):
+        # http://en.wikipedia.org/wiki/Dale%E2%80%93Chall_readability_formula
+        return 0.1579 * ( self.getNumberOfNDCDifficultWords() / self.getNumberOfWords() * 100) + 0.0496 * ( self.getNumberOfWords() / self.getNumberOfSentences() )
+

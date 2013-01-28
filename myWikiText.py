@@ -3,8 +3,7 @@
 
 from __future__ import division
 import nltk
-import re
-import string
+import re, string, math
 from myHyphernator import myHyphernator
 from nltk import word_tokenize, wordpunct_tokenize
 
@@ -28,7 +27,11 @@ class MyWikiText:
         self.__makeSentences()
         self.__makeWords()
         self.__myHyp = myHyphernator()
-    
+        
+        with open("dale-challWordList.txt", "r") as d:
+            dWords = d.readlines()
+        self.__daleWords = [ w.strip() for w in dWords]
+ 
     def validDocument(self):
         return self.getNumberOfWords() > 0
 
@@ -199,3 +202,30 @@ class MyWikiText:
             return 0.0
         longWords = len ( [ w for w in self.__words if len(w) >= 7 ] )
         return self.getNumberOfWords() / self.getNumberOfSentences() + ( (100.0 * longWords) / self.getNumberOfWords() )
+    
+    def getNumberOfPolysyllableWords(self):
+        return len( [w for w in self.__words if w not in string.punctuation and self.__myHyp.numberOfSyllables(w) >= 3] )
+
+    def getGFI(self):
+        # http://en.wikipedia.org/wiki/Gunning_fog_index
+        return 0.4 * ( (self.getNumberOfWords() / self.getNumberOfSentences()) + 100 * ( self.getNumberOfPolysyllableWords() / self.getNumberOfWords()))
+                     
+    def getSMOG(self):
+        # http://en.wikipedia.org/wiki/SMOG 
+        return 1.0430 * math.sqrt( self.getNumberOfPolysyllableWords() * 30 / self.getNumberOfSentences() ) + 3.1291
+    
+    def getARI(self):
+        # http://en.wikipedia.org/wiki/Automated_Readability_Index 
+        return 4.71 * (self.getAvgWordLengthInChars()) + 0.5 * (self.getNumberOfWords()/self.getNumberOfSentences())- 21.43
+
+    def getNumberOfChars(self):
+        nonPunctationWords =  [len(w) for w in self.__words if w not in string.punctuation]
+        return sum(nonPunctationWords)
+    
+    def getNumberOfNDCDifficultWords(self):
+        return len( [w for w in self.__words if w not in string.punctuation and w not in self.__daleWords ] )
+
+    def getNDC(self):
+        # http://en.wikipedia.org/wiki/Dale%E2%80%93Chall_readability_formula
+        return 0.1579 * ( self.getNumberOfNDCDifficultWords() / self.getNumberOfWords() * 100) + 0.0496 * ( self.getNumberOfWords() / self.getNumberOfSentences() )
+

@@ -7,8 +7,8 @@ from processFile import *
 
 if __name__ == "__main__":
 
-    dataDir = "data/en"
-    title = "Zoonosis.en" 
+    dataDir = "data/simple"
+    title = "Zoonosis.simple" 
     fo = sys.stdout
     
     fo.write("%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s\n" % ("filename",\
@@ -26,7 +26,6 @@ if __name__ == "__main__":
             "lixIndex"))
     
     myWikiText = processFile(title, dataDir, fo)
-    print myWikiText.sentences()
 
 
     fo.close()

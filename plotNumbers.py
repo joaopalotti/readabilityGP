@@ -2,12 +2,13 @@ from pylab import *
 from myStatistics import *
 from collections import Counter
 import math
-
+import sys
 
 ## The idea of this program is to get two different files and compare its values
 
 inFile1 = "all.en"
 inFile2 = "all.simple"
+columnToAnalyse = int(sys.argv[1])
 
 with open(inFile1, "r") as f:
     data1 = f.readlines()
@@ -15,21 +16,27 @@ with open(inFile1, "r") as f:
 with open(inFile2, "r") as f:
     data2 = f.readlines()
 
+#print "DATA 1 = ", data1
+columnName = getColumnName(data1, columnToAnalyse)
 
-fleish1 = getOneColumn(data1, 1)
-fleish2 = getOneColumn(data2, 1)
+data1 = getOneColumn(data1, columnToAnalyse)
+data2 = getOneColumn(data2, columnToAnalyse)
 
-fleishInt1 = [ floor(v) for v in fleish1 ] 
-fleishInt2 = [ floor(v) for v in fleish2 ] 
+dataInt1 = [ floor(v) for v in data1 ] 
+dataInt2 = [ floor(v) for v in data2 ] 
 
-c1 = Counter(fleishInt1)
-c2 = Counter(fleishInt2)
+c1 = Counter(dataInt1)
+c2 = Counter(dataInt2)
 
 c1[0] = 0
 c2[0] = 0
 
-plot ( c1.keys(), c1.values() )
-plot ( c2.keys(), c2.values() )
+ylabel("Frequency")
+xlabel(columnName)
+
+plot(c1.keys(), c1.values(), label='En')
+plot(c2.keys(), c2.values(), label='Simple')
+legend()
 
 show()
 

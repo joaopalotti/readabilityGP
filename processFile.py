@@ -80,7 +80,7 @@ def getTextOnly(lines, removeWikiGarbage):
     
     soup = BeautifulSoup(lines)
     text = soup.get_text()
-   
+  
     if removeWikiGarbage:
         # Remove references [ number ]   
         text = re.sub("\[[0-9]*\]", "", text)
@@ -130,7 +130,6 @@ def processFile(title, dataDir="MathWebpageCorpus", outputFile=sys.stdout, goal=
     
     textOnly = getTextOnly(lines, removeWikiGarbage)
     
-    #print textOnly
     if wiki:
         myTextObj = MyWikiText(textOnly)
     else:
@@ -140,32 +139,43 @@ def processFile(title, dataDir="MathWebpageCorpus", outputFile=sys.stdout, goal=
         print title , " IS NOT VALID!!!!!!"
         return
         
-    fleishReadingEase       = myTextObj.getFleschReadingEase()
-    fleschKincaidGradeLevel = myTextObj.getFleschKincaidGradeLevel()
-    colemanLiauIndex        = myTextObj.getColemanLiauIndex()
-    lixIndex                = myTextObj.getLIX()
+    fleishReadingEase        = myTextObj.getFleschReadingEase()
+    fleschKincaidGradeLevel  = myTextObj.getFleschKincaidGradeLevel()
+    colemanLiauIndex         = myTextObj.getColemanLiauIndex()
+    lixIndex                 = myTextObj.getLIX()
 
     # Syllables
-    numSyllables            = myTextObj.getNumberOfSyllables()
+    numSyllables             = myTextObj.getNumberOfSyllables()
     
     # Words
-    numWords                = myTextObj.getNumberOfWords()
-    avgWordLengthInChars    = myTextObj.getAvgWordLengthInChars()
-    avgWordLengthSyl        = myTextObj.getAvgWordLengthInSyllables()
+    numWords                 = myTextObj.getNumberOfWords()
+    avgWordLengthInChars     = myTextObj.getAvgWordLengthInChars()
+    avgWordLengthSyl         = myTextObj.getAvgWordLengthInSyllables()
     
     # Sentences
-    numSentences            = myTextObj.getNumberOfSentences()
-    avgSenLengthInChars     = myTextObj.getAvgSentenceLengthInChars()
+    numSentences             = myTextObj.getNumberOfSentences()
+    avgSenLengthInChars      = myTextObj.getAvgSentenceLengthInChars()
 
     # Combined
-    avgWordsPerSentece      = numWords / numSentences
-    avgSyllablesPerSentence = numSyllables / numSentences
+    avgWordsPerSentece       = numWords / numSentences
+    avgSyllablesPerSentence  = numSyllables / numSentences
+
+    numberOfPolysyllableWord = myTextObj.getNumberOfPolysyllableWords()
+    numberOfChars            = myTextObj.getNumberOfChars()
+
+    gunningFogIndex          = myTextObj.getGFI()
+    SMOG                     = myTextObj.getSMOG()
+    ARI                      = myTextObj.getARI()
+    newDaleChall             = myTextObj.getNDC()
+
 
     #outputFile.write("%s,,,%.3f,,,%.3f,,,%.3f\n" % (title,\
-    outputFile.write("%s,,,%d,,,%d,,,%d,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f\n" % (title,\
+    outputFile.write("%s,,,%d,,,%d,,,%d,,,%d,,,%d,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f\n" % (title,\
                                                             numWords,\
                                                             numSentences,\
                                                             numSyllables,\
+                                                            numberOfPolysyllableWord,\
+                                                            numberOfChars,\
                                                             avgWordLengthSyl,\
                                                             avgWordLengthInChars,\
                                                             avgSenLengthInChars, \
@@ -175,6 +185,10 @@ def processFile(title, dataDir="MathWebpageCorpus", outputFile=sys.stdout, goal=
                                                             fleschKincaidGradeLevel,\
                                                             colemanLiauIndex,\
                                                             lixIndex,\
+                                                            gunningFogIndex,\
+                                                            SMOG,\
+                                                            ARI,\
+                                                            newDaleChall,\
                                                             goal))
 
     return myTextObj        

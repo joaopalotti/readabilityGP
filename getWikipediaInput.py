@@ -18,24 +18,30 @@ if __name__ == "__main__":
         outFileName = re.sub("/","",path)
         fo = open(outFileName + ".out", "w")
         print "Writing %s.out" % (outFileName)
-        
-        fo.write("%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s\n" % ("filename",\
-                "numWords",\
-                "numSentences",\
-                "numSyllables",\
-                "avgWordLengthSyl",\
-                "avgWordLengthInChars",\
-                "avgSenLengthInChars",\
-                "avgWordsPerSentece",\
-                "avgSyllablesPerSentence",\
-                "fleschReadingEase",\
-                "fleschKincaidGradeLevel",\
-                "colemanLiauIndex",\
-                "lixIndex"))
-        
+
+        fo.write("%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s\n" % ("filename",\
+            "numWords",\
+            "numSentences",\
+            "numSyllables",\
+            "numberOfPolysyllableWord",\
+            "numberOfChars",\
+            "avgWordLengthSyl",\
+            "avgWordLengthInChars",\
+            "avgSenLengthInChars",\
+            "avgWordsPerSentece",\
+            "avgSyllablesPerSentence",\
+            "fleschReadingEase",\
+            "fleschKincaidGradeLevel",\
+            "colemanLiauIndex",\
+            "lixIndex",\
+            "gunningFogIndex",\
+            "SMOG",\
+            "ARI",\
+            "newDaleChall",\
+            "goal"))
+
+
         for title in os.listdir(dataDir):
-        
         #   print title
-            processFile(title, dataDir, fo)
-    
+            processFile(title, dataDir, fo, 0.0, removeWikiGarbage=True, wiki=True)
         fo.close()
