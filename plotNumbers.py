@@ -6,8 +6,11 @@ import sys
 
 ## The idea of this program is to get two different files and compare its values
 
+#inFile1 = "all.en.gpout"
+#inFile2 = "all.simple.gpout"
 inFile1 = "all.en"
 inFile2 = "all.simple"
+
 columnToAnalyse = int(sys.argv[1])
 
 with open(inFile1, "r") as f:
@@ -34,10 +37,10 @@ c2[0] = 0
 ylabel("Frequency")
 xlabel(columnName)
 
-plot(c1.keys(), c1.values(), label='En')
-plot(c2.keys(), c2.values(), label='Simple')
+plot(c1.keys(), c1.values(), "o", label='En')
+plot(c2.keys(), c2.values(), "o", label='Simple')
 legend()
 
 show()
 
-
+savefig("bla.png")

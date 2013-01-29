@@ -8,7 +8,7 @@ import operator
 from deap import algorithms, base, creator, tools, gp
 import math
 
-from deap import cTools
+#from deap import cTools
 
 def safeDiv(left, right):
     try:
@@ -48,6 +48,14 @@ def main(argv=None):
     training = []
     test = []
     labels = []
+    
+    cxpb = 0.8
+    mutpb = 0.1 
+    ngen = 50
+    npop = 200
+    tournSize = 5 #int(npop / 100)
+    heightMaxCreation = 5
+    heightMaxNew = 1
    
     labels, training, test = getInputFile(argv[1])
     
@@ -94,7 +102,7 @@ def main(argv=None):
     creator.create("Individual", gp.PrimitiveTree, fitness=creator.Fitness, pset=pset)
 
     toolbox = base.Toolbox()
-    toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=2)
+    toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=heightMaxCreation)
     toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     toolbox.register("lambdify", gp.lambdify, pset=pset)
@@ -233,24 +241,23 @@ def main(argv=None):
 
     toolbox.register("evaluate", evaluate)
     toolbox.register("evaluateTest", evaluateTest)
-    toolbox.register("select", tools.selTournament, tournsize=2)
-    #toolbox.register("select", cTools.selNSGA2)
+    toolbox.register("select", tools.selTournament, tournsize=tournSize)
+    #toolbox.register("select", tools.selNSGA2)
 
     #Crossover
     toolbox.register("mate", gp.cxOnePoint)
     #Mutation
-    #toolbox.register("expr_mut", gp.genGrow, min_=0, max_=1)            0.678173618595
-    #toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut)
+    toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)            #0.631203133704
+    toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut)
     #Mutation options:
-    #toolbox.register("mutate", gp.mutEphemeral, mode="one")              0.60379272486
-    #toolbox.register("mutate", gp.mutEphemeral, mode="all")               0.60379272486
-    #toolbox.register("mutate", gp.mutNodeReplacement)
-    toolbox.register("mutate", gp.mutInsert)
-
-
+    #toolbox.register("mutate", gp.mutEphemeral, mode="one")              # 0.543709266384
+    #toolbox.register("mutate", gp.mutEphemeral, mode="all")             #
+    #toolbox.register("mutate", gp.mutNodeReplacement)  # OK
+    #toolbox.register("mutate", gp.mutInsert)  #--> terrible                          # 0.543709266384
+   
     #here starts the algorithm
     random.seed(seedValue)
-    pop = toolbox.population(n=10)
+    pop = toolbox.population(n=npop)
     hof = tools.HallOfFame(1)
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("avg", tools.mean)
@@ -258,9 +265,6 @@ def main(argv=None):
     stats.register("min", min)
     stats.register("max", max)
 
-    cxpb = 0.8
-    mutpb = 0.1
-    ngen = 10
 
     algorithms.eaSimple(pop, toolbox, cxpb, mutpb, ngen, stats, halloffame=hof)
 
