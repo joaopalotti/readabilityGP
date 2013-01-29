@@ -45,7 +45,7 @@ def staticLimitMutation(individual, expr, heightLimit, toolbox):
     if individual.height > heightLimit: 
         individual[:] = keepInd  
 
-    return individual
+    return individual,
 
 def safeDiv(left, right):
     try:
@@ -318,7 +318,7 @@ def main(argv=None):
     #toolbox.register("mutate", gp.mutEphemeral, mode="one")              0.60379272486
     #toolbox.register("mutate", gp.mutEphemeral, mode="all")               0.60379272486
     #toolbox.register("mutate", gp.mutNodeReplacement)
-    toolbox.register("mutate", gp.mutInsert)
+    #toolbox.register("mutate", gp.mutInsert)
 
 
     #here starts the algorithm

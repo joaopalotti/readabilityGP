@@ -26,7 +26,9 @@ def staticLimitCrossover(ind1, ind2, heightLimit, toolbox):
     if ind2.height > heightLimit: 
         ind2[:] = keepInd2
 
-def staticLimitMutation(individual, expr, heightLimit): 
+    return ind1, ind2
+
+def staticLimitMutation(individual, expr, heightLimit, toolbox): 
     # Store a backup of the original individual 
     keepInd = toolbox.clone(individual) 
 
@@ -39,6 +41,7 @@ def staticLimitMutation(individual, expr, heightLimit):
     if individual.height > heightLimit: 
         individual[:] = keepInd  
 
+    return individual,
 
 def safeDiv(left, right):
     try:
@@ -81,8 +84,8 @@ def main(argv=None):
     
     cxpb = 0.8
     mutpb = 0.1 
-    ngen = 50
-    npop = 200
+    ngen = 5
+    npop = 10
     tournSize = 5 #int(npop / 100)
     heightMaxCreation = 5
     heightMaxNew = 1

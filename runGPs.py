@@ -2,6 +2,10 @@
 from __future__ import division
 from myGPRanking import *
 
+'''
+HOW TO USE:
+    python runGPs.py input 10
+'''
 ## TODO:
 # run X times and get the mean fitness of this X times -- > use the last parameter to send a different seed to my GP
 
