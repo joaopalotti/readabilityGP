@@ -116,7 +116,7 @@ def main(argv=None):
     cxpb = 0.8
     mutpb = 0.1 
     ngen = 10
-    npop = 10
+    npop = 100
     tournSize = 5 #int(npop / 100)
     heightMaxCreation = 5
     heightMaxNew = 1
@@ -225,7 +225,8 @@ def main(argv=None):
         
         ven = sorted(ven)
         vsimple = sorted(vsimple)
-        fitness = checkCorrect(vsimple, ven, bruteForce(vsimple, ven)) / (len(ven) + len(vsimple))
+        #fitness = checkCorrect(vsimple, ven, bruteForce(vsimple, ven)) / (len(ven) + len(vsimple))
+        fitness = linearSearch( vsimple, ven)
 
         return fitness,
     
@@ -289,14 +290,17 @@ def main(argv=None):
 
         ven = sorted(ven)
         vsimple = sorted(vsimple)
-        correct = checkCorrect(vsimple, ven, bruteForce(vsimple, ven))
-        fitness = correct / (len(ven) + len(vsimple))
-
+        #correct = checkCorrect(vsimple, ven, bruteForce(vsimple, ven))
+        #fitness = correct / (len(ven) + len(vsimple))
+        fitness = linearSearch( vsimple, ven)
+        
         fen.close()
         fsimple.close()
         
         print "Final test..."
-        print "Tested: simple:", len(vsimple), "en: ", len(ven), "sum = ", len(vsimple) + len(ven) , " Correct: ", correct, " final ===", fitness
+        #print "Tested: simple:", len(vsimple), "en: ", len(ven), "sum = ", len(vsimple) + len(ven) , " Correct: ", correct, " final ===", fitness
+        print "Tested: len total = ", len(vsimple) + len(ven) , " final ===", fitness
+        print individual
         return fitness,
         
 

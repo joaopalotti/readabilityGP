@@ -10,7 +10,6 @@ import math
 
 #from deap import cTools
 
-
 def staticLimitCrossover(ind1, ind2, heightLimit, toolbox): 
     # Store a backup of the original individuals 
     keepInd1, keepInd2 = toolbox.clone(ind1), toolbox.clone(ind2) 

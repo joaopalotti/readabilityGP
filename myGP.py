@@ -6,12 +6,44 @@ import sys
 import random
 import operator
 from deap import algorithms, base, creator, tools, gp
+from scoop import futures
 
 inputData = []
 labels = []
 
-def numSentences():
-    return 4
+def staticLimitCrossover(ind1, ind2, heightLimit, toolbox): 
+    # Store a backup of the original individuals 
+    keepInd1, keepInd2 = toolbox.clone(ind1), toolbox.clone(ind2) 
+
+    # Mate the two individuals 
+    # The crossover is done in place (see the documentation) 
+    gp.cxOnePoint(ind1, ind2)
+
+    # If a child is higher than the maximum allowed, then 
+    # it is replaced by one of its parent 
+    if ind1.height > heightLimit: 
+        ind1[:] = keepInd1 
+    if ind2.height > heightLimit: 
+        ind2[:] = keepInd2
+
+    return ind1, ind2
+
+def staticLimitMutation(individual, expr, heightLimit, toolbox): 
+    # Store a backup of the original individual 
+    keepInd = toolbox.clone(individual) 
+
+    # Mutate the individual 
+    # The mutation is done in place (see the documentation) 
+    gp.mutUniform(individual, expr) 
+
+    # If the mutation sets the individual higher than the maximum allowed, 
+    # replaced it by the original individual 
+    if individual.height > heightLimit: 
+        individual[:] = keepInd  
+
+    return individual,
+
+
 
 def safeDiv(left, right):
     try:
@@ -35,7 +67,7 @@ def getInputFile(filename):
 
 def main(argv=None):
     
-    getInputFile("input2")
+    getInputFile("input")
     
     ## Create the fitness and individual classes
     # The second argument is the number of arguments used in the function
@@ -65,11 +97,12 @@ def main(argv=None):
     creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin, pset=pset)
 
     toolbox = base.Toolbox()
-    toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=2)
+    toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=5)
     toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     toolbox.register("lambdify", gp.lambdify, pset=pset)
     
+    toolbox.register("map", futures.map)
 
     def evaluate(individual):
         func = toolbox.lambdify(expr=individual)
@@ -98,13 +131,20 @@ def main(argv=None):
 
     toolbox.register("evaluate", evaluate)
     toolbox.register("select", tools.selTournament, tournsize=2)
+    
     toolbox.register("mate", gp.cxOnePoint)
-    toolbox.register("expr_mut", gp.genGrow, min_=0, max_=1)
+    toolbox.register("expr_mut", gp.genGrow, min_=0, max_=10)
     toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut)
+    
+    #toolbox.register("mate", staticLimitCrossover, heightLimit=20, toolbox=toolbox)
+    #Mutation
+    #toolbox.register("expr_mut", gp.genGrow, min_=0, max_=5)
+    #toolbox.register("mutate", staticLimitMutation, expr=toolbox.expr_mut, heightLimit=20, toolbox=toolbox)
+
 
     #here starts the algorithm
     random.seed(10)
-    pop = toolbox.population(n=4000)
+    pop = toolbox.population(n=100)
     hof = tools.HallOfFame(1)
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("avg", tools.mean)
@@ -112,7 +152,7 @@ def main(argv=None):
     stats.register("min", min)
     stats.register("max", max)
 
-    algorithms.eaSimple(pop, toolbox, 0.8, 0.1, 200, stats, halloffame=hof)
+    algorithms.eaSimple(pop, toolbox, 0.8, 0.1, 100, stats, halloffame=hof)
 
     #print pop, stats, hof
     print stats, hof
