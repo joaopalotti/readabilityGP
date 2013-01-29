@@ -10,6 +10,36 @@ import math
 
 #from deap import cTools
 
+
+def staticLimitCrossover(ind1, ind2, heightLimit, toolbox): 
+    # Store a backup of the original individuals 
+    keepInd1, keepInd2 = toolbox.clone(ind1), toolbox.clone(ind2) 
+
+    # Mate the two individuals 
+    # The crossover is done in place (see the documentation) 
+    gp.cxOnePoint(ind1, ind2)
+
+    # If a child is higher than the maximum allowed, then 
+    # it is replaced by one of its parent 
+    if ind1.height > heightLimit: 
+        ind1[:] = keepInd1 
+    if ind2.height > heightLimit: 
+        ind2[:] = keepInd2
+
+def staticLimitMutation(individual, expr, heightLimit): 
+    # Store a backup of the original individual 
+    keepInd = toolbox.clone(individual) 
+
+    # Mutate the individual 
+    # The mutation is done in place (see the documentation) 
+    gp.mutUniform(individual, expr) 
+
+    # If the mutation sets the individual higher than the maximum allowed, 
+    # replaced it by the original individual 
+    if individual.height > heightLimit: 
+        individual[:] = keepInd  
+
+
 def safeDiv(left, right):
     try:
         return left / right
@@ -56,7 +86,8 @@ def main(argv=None):
     tournSize = 5 #int(npop / 100)
     heightMaxCreation = 5
     heightMaxNew = 1
-   
+    heightLimit = 30
+
     labels, training, test = getInputFile(argv[1])
     
     seedValue = 29
@@ -245,10 +276,14 @@ def main(argv=None):
     #toolbox.register("select", tools.selNSGA2)
 
     #Crossover
-    toolbox.register("mate", gp.cxOnePoint)
+    #toolbox.register("mate", gp.cxOnePoint)
+    toolbox.register("mate", staticLimitCrossover, heightLimit=heightLimit, toolbox=toolbox)
     #Mutation
-    toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)            #0.631203133704
-    toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut)
+    toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)
+    toolbox.register("mutate", staticLimitMutation, expr=toolbox.expr_mut, heightLimit=heightLimit, toolbox=toolbox)
+
+    #toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)
+    #toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut)
     #Mutation options:
     #toolbox.register("mutate", gp.mutEphemeral, mode="one")              # 0.543709266384
     #toolbox.register("mutate", gp.mutEphemeral, mode="all")             #

@@ -27,6 +27,7 @@ def calculateRanking(argv=None):
     columnData = []
     goals = []
 
+    print "Getting data from column: ", lines[0].split(",,,")[columnNumber:columnNumber+1]
     for line in lines[1:]:
         fields = line.split(",,,")
         goal = float( fields[-1] )
