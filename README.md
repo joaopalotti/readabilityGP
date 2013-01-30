@@ -8,4 +8,4 @@ DEPENDENCES
 2) Beautiful Soap 4: pip install beautifulsoup4 
 3) NLTK: pip install -U pyyaml nltk
 4) wordnik dictionary: pip install wordnik
-5) mathplotlib: pip install mathplotlib
+5) matplotlib: pip install matplotlib

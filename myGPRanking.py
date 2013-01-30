@@ -7,8 +7,33 @@ import random
 import operator
 from deap import algorithms, base, creator, tools, gp
 import math
+from scoop import futures
 
 #from deap import cTools
+
+def kernelCalc(func, t):          
+
+    return func(\
+              t["numWords"],\
+              t["numSentences"],\
+              t["numSyllables"],\
+              t["numberOfPolysyllableWord"],\
+              t["numberOfChars"],\
+              t["avgWordLengthSyl"],\
+              t["avgWordLengthInChars"],\
+              t["avgSenLengthInChars"],\
+              t["avgWordsPerSentece"],\
+              t["avgSyllablesPerSentence"],\
+              # Optionals
+              t["fleschReadingEase"],\
+              t["fleschKincaidGradeLevel"],\
+              t["colemanLiauIndex"],\
+              t["lixIndex"],\
+              t["gunningFogIndex"],\
+              t["SMOG"],\
+              t["ARI"],\
+              t["newDaleChall"],\
+          )
 
 def staticLimitCrossover(ind1, ind2, heightLimit, toolbox): 
     # Store a backup of the original individuals 
@@ -83,9 +108,9 @@ def main(argv=None):
     
     cxpb = 0.8
     mutpb = 0.1 
-    ngen = 5
-    npop = 10
-    tournSize = 5 #int(npop / 100)
+    ngen = 10
+    npop = 100
+    tournSize = 2 #int(npop / 100)
     heightMaxCreation = 5
     heightMaxNew = 1
     heightLimit = 30
@@ -96,9 +121,12 @@ def main(argv=None):
     if len(argv) > 2:
         seedValue = argv[2] 
 
+    print seedValue
+    random.seed(seedValue)
+    
     ## Create the fitness and individual classes
     # The second argument is the number of arguments used in the function
-    pset = gp.PrimitiveSet("MAIN", 10 ) #+ 8)
+    pset = gp.PrimitiveSet("MAIN", 10 + 8)
     '''
         Arg-1 => fileName
         Arg0  => numWords
@@ -152,48 +180,11 @@ def main(argv=None):
                 
                 if abs(t["goal"] - other["goal"]) < 0.5:
                     continue
-                
+               
                 possible += 1
-                funcResult = func(t["numWords"],\
-                        t["numSentences"],\
-                        t["numSyllables"],\
-                        t["numberOfPolysyllableWord"],\
-                        t["numberOfChars"],\
-                        t["avgWordLengthSyl"],\
-                        t["avgWordLengthInChars"],\
-                        t["avgSenLengthInChars"],\
-                        t["avgWordsPerSentece"],\
-                        t["avgSyllablesPerSentence"],\
-                        # Optionals
-                        #t["fleschReadingEase"],\
-                        #t["fleschKincaidGradeLevel"],\
-                        #t["colemanLiauIndex"],\
-                        #t["lixIndex"],\
-                        #t["gunningFogIndex"],\
-                        #t["SMOG"],\
-                        #t["ARI"],\
-                        #t["newDaleChall"],\
-                    )
-                otherResult = func(other["numWords"],\
-                        other["numSentences"],\
-                        other["numSyllables"],\
-                        other["numberOfPolysyllableWord"],\
-                        other["numberOfChars"],\
-                        other["avgWordLengthSyl"],\
-                        other["avgWordLengthInChars"],\
-                        other["avgSenLengthInChars"],\
-                        other["avgWordsPerSentece"],\
-                        other["avgSyllablesPerSentence"],\
-                        # Optionals
-                        #other["fleschReadingEase"],\
-                        #other["fleschKincaidGradeLevel"],\
-                        #other["colemanLiauIndex"],\
-                        #other["lixIndex"],\
-                        #other["gunningFogIndex"],\
-                        #other["SMOG"],\
-                        #other["ARI"],\
-                        #other["newDaleChall"],\
-                    )
+                funcResult = kernelCalc(func, t)
+                otherResult = kernelCalc(func, other)
+
                 if funcResult >= otherResult and t["goal"] >= other["goal"]:
                     correct += 1
                  
@@ -218,46 +209,8 @@ def main(argv=None):
                     continue
                 
                 possible += 1
-                funcResult = func(t["numWords"],\
-                        t["numSentences"],\
-                        t["numSyllables"],\
-                        t["numberOfPolysyllableWord"],\
-                        t["numberOfChars"],\
-                        t["avgWordLengthSyl"],\
-                        t["avgWordLengthInChars"],\
-                        t["avgSenLengthInChars"],\
-                        t["avgWordsPerSentece"],\
-                        t["avgSyllablesPerSentence"],\
-                        # Optionals
-                        #t["fleschReadingEase"],\
-                        #t["fleschKincaidGradeLevel"],\
-                        #t["colemanLiauIndex"],\
-                        #t["lixIndex"],\
-                        #t["gunningFogIndex"],\
-                        #t["SMOG"],\
-                        #t["ARI"],\
-                        #t["newDaleChall"],\
-                    )
-                otherResult = func(other["numWords"],\
-                        other["numSentences"],\
-                        other["numSyllables"],\
-                        other["numberOfPolysyllableWord"],\
-                        other["numberOfChars"],\
-                        other["avgWordLengthSyl"],\
-                        other["avgWordLengthInChars"],\
-                        other["avgSenLengthInChars"],\
-                        other["avgWordsPerSentece"],\
-                        other["avgSyllablesPerSentence"],\
-                        # Optionals
-                        #other["fleschReadingEase"],\
-                        #other["fleschKincaidGradeLevel"],\
-                        #other["colemanLiauIndex"],\
-                        #other["lixIndex"],\
-                        #other["gunningFogIndex"],\
-                        #other["SMOG"],\
-                        #other["ARI"],\
-                        #other["newDaleChall"],\
-                    )
+                funcResult = kernelCalc(func, t)
+                otherResult = kernelCalc(func, other)
 
                 if funcResult >= otherResult and t["goal"] >= other["goal"]:
                     correct += 1
@@ -272,6 +225,7 @@ def main(argv=None):
         print "Tested: ", len(test), " correct: ", correct, "possible ", possible, " final ===", correct/possible
         return fitness,
 
+    toolbox.register("map", futures.map)
     toolbox.register("evaluate", evaluate)
     toolbox.register("evaluateTest", evaluateTest)
     toolbox.register("select", tools.selTournament, tournsize=tournSize)
@@ -293,7 +247,6 @@ def main(argv=None):
     #toolbox.register("mutate", gp.mutInsert)  #--> terrible                          # 0.543709266384
    
     #here starts the algorithm
-    random.seed(seedValue)
     pop = toolbox.population(n=npop)
     hof = tools.HallOfFame(1)
     stats = tools.Statistics(lambda ind: ind.fitness.values)

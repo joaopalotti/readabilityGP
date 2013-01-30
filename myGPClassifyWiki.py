@@ -15,6 +15,31 @@ from findOptimum import *
 The goal of this version is to separate the Simple English from the English Wikipedia as much as possible.
 '''
 
+def kernelCalc(func, t):          
+
+    return func(\
+              t["numWords"],\
+              t["numSentences"],\
+              t["numSyllables"],\
+              t["numberOfPolysyllableWord"],\
+              t["numberOfChars"],\
+              t["avgWordLengthSyl"],\
+              t["avgWordLengthInChars"],\
+              t["avgSenLengthInChars"],\
+              t["avgWordsPerSentece"],\
+              t["avgSyllablesPerSentence"],\
+              # Optionals
+              t["fleschReadingEase"],\
+              t["fleschKincaidGradeLevel"],\
+              t["colemanLiauIndex"],\
+              t["lixIndex"],\
+              t["gunningFogIndex"],\
+              t["SMOG"],\
+              t["ARI"],\
+              t["newDaleChall"],\
+          )
+
+
 def staticLimitCrossover(ind1, ind2, heightLimit, toolbox): 
     # Store a backup of the original individuals 
     keepInd1, keepInd2 = toolbox.clone(ind1), toolbox.clone(ind2) 
@@ -116,8 +141,8 @@ def main(argv=None):
     cxpb = 0.8
     mutpb = 0.1 
     ngen = 10
-    npop = 100
-    tournSize = 5 #int(npop / 100)
+    npop = 10
+    tournSize = 2 #int(npop / 100)
     heightMaxCreation = 5
     heightMaxNew = 1
     heightLimit = 30
@@ -178,49 +203,11 @@ def main(argv=None):
         ven = []
 
         for t in simpleTraining:
-            funcResult = func(t["numWords"],\
-                        t["numSentences"],\
-                        t["numSyllables"],\
-                        t["numberOfPolysyllableWord"],\
-                        t["numberOfChars"],\
-                        t["avgWordLengthSyl"],\
-                        t["avgWordLengthInChars"],\
-                        t["avgSenLengthInChars"],\
-                        t["avgWordsPerSentece"],\
-                        t["avgSyllablesPerSentence"],\
-                        # Optionals
-                        t["fleschReadingEase"],\
-                        t["fleschKincaidGradeLevel"],\
-                        t["colemanLiauIndex"],\
-                        t["lixIndex"],\
-                        t["gunningFogIndex"],\
-                        t["SMOG"],\
-                        t["ARI"],\
-                        t["newDaleChall"],\
-            )
+            funcResult = kernelCalc(func, t)
             vsimple.append(funcResult)
 
         for t in enTraining:
-            funcResult = func(t["numWords"],\
-                        t["numSentences"],\
-                        t["numSyllables"],\
-                        t["numberOfPolysyllableWord"],\
-                        t["numberOfChars"],\
-                        t["avgWordLengthSyl"],\
-                        t["avgWordLengthInChars"],\
-                        t["avgSenLengthInChars"],\
-                        t["avgWordsPerSentece"],\
-                        t["avgSyllablesPerSentence"],\
-                        # Optionals
-                        t["fleschReadingEase"],\
-                        t["fleschKincaidGradeLevel"],\
-                        t["colemanLiauIndex"],\
-                        t["lixIndex"],\
-                        t["gunningFogIndex"],\
-                        t["SMOG"],\
-                        t["ARI"],\
-                        t["newDaleChall"],\
-            )
+            funcResult = kernelCalc(func, t)
             ven.append(funcResult)
         
         ven = sorted(ven)
@@ -241,50 +228,12 @@ def main(argv=None):
         fen.write("filename,,,gpresult\n")
 
         for t in simpleTest:
-            funcResult = func(t["numWords"],\
-                        t["numSentences"],\
-                        t["numSyllables"],\
-                        t["numberOfPolysyllableWord"],\
-                        t["numberOfChars"],\
-                        t["avgWordLengthSyl"],\
-                        t["avgWordLengthInChars"],\
-                        t["avgSenLengthInChars"],\
-                        t["avgWordsPerSentece"],\
-                        t["avgSyllablesPerSentence"],\
-                        # Optionals
-                        t["fleschReadingEase"],\
-                        t["fleschKincaidGradeLevel"],\
-                        t["colemanLiauIndex"],\
-                        t["lixIndex"],\
-                        t["gunningFogIndex"],\
-                        t["SMOG"],\
-                        t["ARI"],\
-                        t["newDaleChall"],\
-            )
+            funcResult = kernelCalc(func, t)
             fsimple.write("%s,,,%.3f\n" % (t["filename"], funcResult))
             vsimple.append(funcResult)
         
         for t in enTest:
-            funcResult = func(t["numWords"],\
-                        t["numSentences"],\
-                        t["numSyllables"],\
-                        t["numberOfPolysyllableWord"],\
-                        t["numberOfChars"],\
-                        t["avgWordLengthSyl"],\
-                        t["avgWordLengthInChars"],\
-                        t["avgSenLengthInChars"],\
-                        t["avgWordsPerSentece"],\
-                        t["avgSyllablesPerSentence"],\
-                        # Optionals
-                        t["fleschReadingEase"],\
-                        t["fleschKincaidGradeLevel"],\
-                        t["colemanLiauIndex"],\
-                        t["lixIndex"],\
-                        t["gunningFogIndex"],\
-                        t["SMOG"],\
-                        t["ARI"],\
-                        t["newDaleChall"],\
-            )
+            funcResult = kernelCalc(func, t)
             ven.append(funcResult)
             fen.write("%s,,,%.3f\n" % (t["filename"], funcResult))
 
