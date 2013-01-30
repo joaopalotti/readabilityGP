@@ -9,3 +9,9 @@ DEPENDENCES
 3) NLTK: pip install -U pyyaml nltk
 4) wordnik dictionary: pip install wordnik
 5) matplotlib: pip install matplotlib
+
+
+EXPLANATIONS
+============
+
+

@@ -116,7 +116,8 @@ def getOneColumn(data, col):
     #print "Getting Column ", col
     values = []
     for row in data[1:]:
-        values.append( float(row.split(",,,")[col:col+1][0]) )
+        #values.append( float(row.split(",,,")[col:col+1][0]) )
+        values.append( (row.split(",,,")[col:col+1][0]) )
     return values
 
 if __name__ == "__main__":

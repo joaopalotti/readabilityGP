@@ -18,7 +18,7 @@ for i in range(0, CV):
     fitness += calculateRanking ([baseFileName + str(i) + ".test" , col] )
     print "fitness %d = %f" % (i, fitness)
 
-print "Mean Fitness = ", fitness/CV
+print "Mean Fitness = %.4f" % (fitness/CV * 100.0)
 
 
 

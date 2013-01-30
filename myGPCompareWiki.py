@@ -8,6 +8,13 @@ import operator
 from deap import algorithms, base, creator, tools, gp
 import math
 
+"""
+HOW TO USE:
+    python -m scoop myGPCompareWiki.py 
+
+    ----->>>>> REMEMBER TO SET fileToLoad with path to data and cv number 
+"""
+
 cxpb = 0.8
 mutpb = 0.1 
 ngen = 40
@@ -17,7 +24,8 @@ heightMaxCreation = 3
 heightMaxNew = 2
 heightLimit = 30
 usingScoop = True
-fileToLoad = open("gpRankingPath", "r").read().strip()
+fileToLoad, cvNumber = open("fileToLoad", "r").read().split()
+cvNumber = int(cvNumber)
 
 if usingScoop:
     from scoop import futures
@@ -84,40 +92,64 @@ def safeDiv(left, right):
     except ZeroDivisionError:
         return 0.0
 
-def getInputFile(filename):
+def getInputFile(filename, cvNumber):
     
-    training = []
-    test = []
+    simpleTraining = []
+    simpleTest = []
+    enTraining = []
+    enTest = []
 
-    with open(filename + ".training","r") as f:
-        trainingLines = f.readlines()
+    with open(filename + ".simple" + str(cvNumber) + ".training","r") as f:
+        simpleLinesTraining = f.readlines()
      
-    with open(filename + ".test","r") as f:
-        testLines = f.readlines()
+    with open(filename + ".simple" + str(cvNumber) + ".test","r") as f:
+        simpleLinesTest = f.readlines()
+
+    with open(filename + ".en" + str(cvNumber) + ".training","r") as f:
+        enLinesTraining = f.readlines()
     
-    labels = [ l.strip() for l in trainingLines[0].split(",,,") ]
-        
-    for line in trainingLines[1:]:
+    with open(filename + ".en" + str(cvNumber) + ".test","r") as f:
+        enLinesTest = f.readlines()
+    
+    
+    labels = [ l.strip() for l in simpleLinesTraining[0].split(",,,") ]
+    
+    for line in simpleLinesTraining[1:]:
         valuesTmp = [ value.strip() for value in line.split(",,,")]
         values = [ float(v) for v in valuesTmp[1:]  ]
         values = [ valuesTmp[0] ] + values
-        training.append(dict(zip(labels, values))) 
-         
-    for line in testLines[1:]:
+        simpleTraining.append(dict(zip(labels, values))) 
+
+    for line in simpleLinesTest[1:]:
         valuesTmp = [ value.strip() for value in line.split(",,,")]
         values = [ float(v) for v in valuesTmp[1:]  ]
         values = [ valuesTmp[0] ] + values
-        test.append(dict(zip(labels, values))) 
+        simpleTest.append(dict(zip(labels, values))) 
+    #----------------------------------------------------------------     
+
+    for line in enLinesTraining[1:]:
+        valuesTmp = [ value.strip() for value in line.split(",,,")]
+        values = [ float(v) for v in valuesTmp[1:]  ]
+        values = [ valuesTmp[0] ] + values
+        enTraining.append(dict(zip(labels, values))) 
+     
+    for line in enLinesTest[1:]:
+        valuesTmp = [ value.strip() for value in line.split(",,,")]
+        values = [ float(v) for v in valuesTmp[1:]  ]
+        values = [ valuesTmp[0] ] + values
+        enTest.append(dict(zip(labels, values))) 
     
-    return labels, training, test
+    return labels, simpleTraining, simpleTest, enTraining, enTest
 
 
-training = []
-test = []
+simpleTraining = []
+simpleTest = []
+enTraining = []
+enTest = []
 labels = []
 
-labels, training, test = getInputFile(fileToLoad)
-    
+labels, simpleTraining, simpleTest, enTraining, enTest = getInputFile(fileToLoad, cvNumber)
+  
 ## Create the fitness and individual classes
 # The second argument is the number of arguments used in the function
 pset = gp.PrimitiveSet("MAIN", 10 + 8)
@@ -145,14 +177,11 @@ pset = gp.PrimitiveSet("MAIN", 10 + 8)
     Arg17  => newDaleChall
 '''
 
-def myEphemeral():
-    return random.random() * 10
-
 pset.addPrimitive(safeDiv, 2)
 pset.addPrimitive(operator.add, 2)
 pset.addPrimitive(operator.mul, 2)
 pset.addPrimitive(operator.sub, 2)
-pset.addEphemeralConstant(myEphemeral)
+#pset.addEphemeralConstant(lambda: random.random() * 10)
 #    pset.addTerminal(1)
 #    pset.addTerminal(0)
 
@@ -167,67 +196,41 @@ toolbox.register("lambdify", gp.lambdify, pset=pset)
 if usingScoop:
     toolbox.register("map", futures.map)
 
-def regulationFactor(individual):
-    if not individual.height:
-        return 0.0
-
-    factor = math.log(individual.height) / 100.0
-    return factor
-
 def evaluate(individual):
     func = toolbox.lambdify(expr=individual)
     correct = 0.0
-    possible = 0
    
-    for i in range(len(training)):
-        t = training[i]
-        for j in range(i + 1, len(training)):
-            other = training[j]
-            
-            if abs(t["goal"] - other["goal"]) < 0.5:
-                continue
-           
-            possible += 1
-            # change it to a map
-            funcResult = kernelCalc(func, t)
-            otherResult = kernelCalc(func, other)
+    for i in range(len(enTraining)):
+        enInstance = enTraining[i]
+        simpleInstance = simpleTraining[i]
 
-            if funcResult >= otherResult and t["goal"] >= other["goal"]:
+        enResult = kernelCalc(func, enInstance)
+        simpleResult = kernelCalc(func, simpleInstance)
+
+        if enResult >= simpleResult:
                 correct += 1
              
-            elif funcResult < otherResult and t["goal"] < other["goal"]:
-                correct += 1
-        
-    fitness = (correct / possible) - regulationFactor(individual)
+    fitness = correct / len(enTraining)
     return fitness,
 
 def evaluateTest(individual):
     func = toolbox.lambdify(expr=individual)
     correct = 0.0
-    possible = 0
    
-    for i in range(len(test)):
-        t = test[i]
-        for j in range(i + 1, len(test)):
-            other = test[j]
-            
-            if abs(t["goal"] - other["goal"]) < 0.5:
-                continue
-            
-            possible += 1
-            funcResult = kernelCalc(func, t)
-            otherResult = kernelCalc(func, other)
+    for i in range(len(enTest)):
+        enInstance = enTest[i]
+        simpleInstance = simpleTest[i]
 
-            if funcResult >= otherResult and t["goal"] >= other["goal"]:
+        enResult = kernelCalc(func, enInstance)
+        simpleResult = kernelCalc(func, simpleInstance)
+
+        if enResult >= simpleResult:
                 correct += 1
              
-            elif funcResult < otherResult and t["goal"] < other["goal"]:
-                correct += 1
-        
-    fitness = correct / possible
-    
+    fitness = correct / len(enTest)
+
     print "Final test..."
-    print "Tested: ", len(test), " correct: ", correct, "possible ", possible, " final ===", correct/possible
+    print "Tested: ", len(enTest), " correct: ", correct, " final ===", correct/len(enTest)
     return fitness,
 
 toolbox.register("evaluate", evaluate)

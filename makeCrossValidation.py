@@ -21,7 +21,7 @@ titles = lines[0]
 
 shuffledLines = lines[1:]
 #shuffle the data
-random.shuffle(shuffledLines)
+#random.shuffle(shuffledLines)
 
 eachCV = int(len(shuffledLines)/nCV)
 
