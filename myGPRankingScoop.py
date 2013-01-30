@@ -8,8 +8,6 @@ import operator
 from deap import algorithms, base, creator, tools, gp
 import math
 
-#from deap import cTools
-
 cxpb = 0.8
 mutpb = 0.1 
 ngen = 40
@@ -19,6 +17,7 @@ heightMaxCreation = 3
 heightMaxNew = 2
 heightLimit = 30
 usingScoop = True
+fileToLoad = open("fileToLoad", "r").read().strip()
 
 if usingScoop:
     from scoop import futures
@@ -117,7 +116,7 @@ training = []
 test = []
 labels = []
 
-labels, training, test = getInputFile("mathData/CV5/input0")
+labels, training, test = getInputFile(fileToLoad)
     
 ## Create the fitness and individual classes
 # The second argument is the number of arguments used in the function
@@ -243,7 +242,6 @@ toolbox.register("mutate", staticLimitMutation, expr=toolbox.expr_mut, heightLim
 
 def main(argv=None):
     
-
     seedValue = 29
     if len(argv) > 2:
         seedValue = argv[2] 
