@@ -6,7 +6,7 @@ import sys, random, operator, math, csv
 from deap import algorithms, base, creator, tools, gp
 from optparse import OptionParser
 
-#from deap import cTools
+usingScoop = True
 
 '''
 The goal of this version is to separate the Simple English from the English Wikipedia as much as possible.
@@ -86,105 +86,100 @@ def getInputFile(fileName):
     print "len list = ", len(featureList)
     return featureList
 
-def main(simpleFileName, enFileName):
-    
-    simpleFeatures = getInputFile(simpleFileName)
-    enFeatures = getInputFile(enFileName)
- 
-    cxpb = 0.9
-    mutpb = 0.1 
-    ngen = 10
-    npop = 500
-    tournSize = 2 #int(npop / 100)
-    heightMaxCreation = 5
-    heightMaxNew = 1
-    heightLimit = 30
-    seedValue = 29
-    
-    ## Create the fitness and individual classes
-    # The second argument is the number of arguments used in the function
-    pset = gp.PrimitiveSet("MAIN", 16)
-    '''
-        Arg-1 => filename
-        Arg0  => numWords
-        Arg1  => numSentences
-        Arg2  => numSyllables
-        Arg3  => numberOfPolysyllableWord
-        Arg4  => numberOfChars
-        Arg5  => avgWordLengthSyl
-        Arg6  => avgWordLengthInChars
-        Arg7  => avgSenLengthInChars
-        Arg8  => avgWordsPerSentece
-        Arg9  => avgSyllablesPerSentence
-       
-        Optionals
-        Arg10  => fleschReadingEase
-        Arg11  => fleschKincaidGradeLevel
-        Arg12  => colemanLiauIndex
-        Arg13  => lixIndex
-        Arg14  => gunningFogIndex
-        Arg15  => SMOG
-        Arg16  => ARI
-        Arg17  => newDaleChall
-    '''
-    pset.addPrimitive(safeDiv, 2)
-    pset.addPrimitive(operator.add, 2)
-    pset.addPrimitive(operator.mul, 2)
-    pset.addPrimitive(operator.sub, 2)
-    #pset.addEphemeralConstant(lambda: random.random() * 10)
+## Create the fitness and individual classes
+# The second argument is the number of arguments used in the function
+pset = gp.PrimitiveSet("MAIN", 16)
+'''
+    Arg-1 => filename
+    Arg0  => numWords
+    Arg1  => numSentences
+    Arg2  => numSyllables
+    Arg3  => numberOfPolysyllableWord
+    Arg4  => numberOfChars
+    Arg5  => avgWordLengthSyl
+    Arg6  => avgWordLengthInChars
+    Arg7  => avgSenLengthInChars
+    Arg8  => avgWordsPerSentece
+    Arg9  => avgSyllablesPerSentence
+   
+    Optionals
+    Arg10  => fleschReadingEase
+    Arg11  => fleschKincaidGradeLevel
+    Arg12  => colemanLiauIndex
+    Arg13  => lixIndex
+    Arg14  => gunningFogIndex
+    Arg15  => SMOG
+    Arg16  => ARI
+    Arg17  => newDaleChall
+'''
+pset.addPrimitive(safeDiv, 2)
+pset.addPrimitive(operator.add, 2)
+pset.addPrimitive(operator.mul, 2)
+pset.addPrimitive(operator.sub, 2)
+
+def myEphemeral():
+    return random.random()
+
+pset.addEphemeralConstant(myEphemeral)
 #    pset.addTerminal(1)
 #    pset.addTerminal(0)
 
-    creator.create("Fitness", base.Fitness, weights=(-1.0,))
-    creator.create("Individual", gp.PrimitiveTree, fitness=creator.Fitness, pset=pset)
 
-    toolbox = base.Toolbox()
-    toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=heightMaxNew)
-    toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
-    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-    toolbox.register("lambdify", gp.lambdify, pset=pset)
-    
-    def evaluate(individual):
-        func = toolbox.lambdify(expr=individual)
-        funcResult = 0
-        alpha = 0.001
-        regularization = 0.0
-        correct, total = 0.0, 0
+tournSize = 2 #int(npop / 100)
+heightMaxCreation = 5
+heightMaxNew = 1
+heightLimit = 30
 
-        for t in simpleFeatures:
-            funcResult = kernelCalc(func, t)
-            if funcResult < 0:
-                correct += 1
-            total += 1
+creator.create("Fitness", base.Fitness, weights=(-1.0,))
+creator.create("Individual", gp.PrimitiveTree, fitness=creator.Fitness, pset=pset)
 
-        for t in enFeatures:
-            funcResult = kernelCalc(func, t) - 1
-            if funcResult > 0:
-                correct += 1
-            total += 1
-       
-        fitness = (total - correct) / total
-        return fitness,
-    
-    toolbox.register("evaluate", evaluate)
-    #toolbox.register("evaluateTest", evaluateTest)
-    toolbox.register("select", tools.selTournament, tournsize=tournSize)
-    #toolbox.register("select", cTools.selNSGA2)
+toolbox = base.Toolbox()
+toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=heightMaxNew)
+toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
+toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+toolbox.register("lambdify", gp.lambdify, pset=pset)
 
-    #Crossover
-    #toolbox.register("mate", gp.cxOnePoint)
-    toolbox.register("mate", staticLimitCrossover, heightLimit=heightLimit, toolbox=toolbox)
-    #Mutation
-    toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)
-    toolbox.register("mutate", staticLimitMutation, expr=toolbox.expr_mut, heightLimit=heightLimit, toolbox=toolbox)
+if usingScoop:
+    from scoop import futures
+    toolbox.register("map", futures.map)
 
-    #toolbox.register("expr_mut", gp.genGrow, min_=0, max_=1)            0.678173618595
-    #toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut)
-    #Mutation options:
-    #toolbox.register("mutate", gp.mutEphemeral, mode="one")              0.60379272486
-    #toolbox.register("mutate", gp.mutEphemeral, mode="all")               0.60379272486
-    #toolbox.register("mutate", gp.mutNodeReplacement)
-    #toolbox.register("mutate", gp.mutInsert)
+def evaluate(individual):
+    func = toolbox.lambdify(expr=individual)
+    funcResult = 0
+    alpha = 0.001
+    regularization = 0.0
+    correct, total = 0.0, 0
+
+    for t in simpleFeatures:
+        funcResult = kernelCalc(func, t)
+        if funcResult < 0:
+            correct += 1
+        total += 1
+
+    for t in enFeatures:
+        funcResult = kernelCalc(func, t) - 1
+        if funcResult > 0:
+            correct += 1
+        total += 1
+  
+    fitness = (total - correct) / total
+    return fitness,
+
+
+toolbox.register("evaluate", evaluate)
+#toolbox.register("evaluateTest", evaluateTest)
+toolbox.register("select", tools.selTournament, tournsize=tournSize)
+#toolbox.register("select", cTools.selNSGA2)
+
+#Crossover
+#toolbox.register("mate", gp.cxOnePoint)
+toolbox.register("mate", staticLimitCrossover, heightLimit=heightLimit, toolbox=toolbox)
+#Mutation
+toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)
+toolbox.register("mutate", staticLimitMutation, expr=toolbox.expr_mut, heightLimit=heightLimit, toolbox=toolbox)
+
+
+def main(ngen, npop, mutpb, cxpb, seedValue):
 
     #here starts the algorithm
     random.seed(seedValue)
@@ -197,6 +192,7 @@ def main(simpleFileName, enFileName):
     stats.register("max", max)
 
     algorithms.eaSimple(pop, toolbox, cxpb, mutpb, ngen, stats, halloffame=hof)
+    #algorithms.eaMuPlusLambda(pop, toolbox, npop, npop + 50, cxpb, mutpb, ngen, stats, halloffame=hof)
 
     #print pop, stats, hof
     print stats, hof
@@ -205,16 +201,23 @@ def main(simpleFileName, enFileName):
     #print "Fitness in test = %.4f" % ( fitnessInTest[0][0] * 100.0 )
     #return fitnessInTest[0][0]
     
+simpleFeatures = getInputFile("../readability/simpleMediaWiki.csv")
+enFeatures = getInputFile("../readability/enMediaWiki.csv")
 if __name__ == "__main__":
 
     op = OptionParser(version="%prog 0.001")
-    op.add_option("--simple", "-s", action="store", type="string", dest="simpleFileName", help="File Name for the Simple English Wikipedia Dataset.", metavar="FILE")
-    op.add_option("--en", "-e", action="store", type="string", dest="enFileName", help="File Name for the English Wikipedia Dataset.", metavar="FILE")
+    #op.add_option("--simple", "-s", action="store", type="string", dest="simpleFileName", help="File Name for the Simple English Wikipedia Dataset.", metavar="FILE")
+    #op.add_option("--en", "-e", action="store", type="string", dest="enFileName", help="File Name for the English Wikipedia Dataset.", metavar="FILE")
+    op.add_option("--gen", "-g", action="store", type="int", dest="ngen", help="Number of generations.", metavar="GEN", default=50)
+    op.add_option("--pop", "-p", action="store", type="int", dest="npop", help="Number of individuals.", metavar="POP", default=100)
+    op.add_option("--mutb", "-m", action="store", type="float", dest="mutpb", help="Probability of multation.", metavar="PROB", default=0.10)
+    op.add_option("--cxpb", "-c", action="store", type="float", dest="cxpb", help="Probability of crossover.", metavar="PROB", default=0.90)
+    op.add_option("--seed", "-s", action="store", type="int", dest="seed", help="Random Seed.", metavar="SEED", default=29)
     (opts, args) = op.parse_args()
     
     if len(args) > 0:
         op.error("this script takes no arguments.")
         sys.exit(1)
 
-    main(opts.enFileName, opts.simpleFileName)
+    main(opts.ngen, opts.npop, opts.mutpb, opts.cxpb, opts.seed)
 
