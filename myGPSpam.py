@@ -5,8 +5,10 @@ from __future__ import division
 import sys, random, operator, math, csv, itertools
 from deap import algorithms, base, creator, tools, gp
 from optparse import OptionParser
+from sklearn.cross_validation import train_test_split
 
 usingScoop = True
+#usingScoop = False
 
 '''
 The goal of this version is to separate the Simple English from the English Wikipedia as much as possible.
@@ -71,8 +73,10 @@ def staticLimitMutation(individual, expr, heightLimit, toolbox):
 
 def safeDiv(left, right):
     try:
+        #print "Left = ", left, "---"
+        #print "Right = ", right, "---"
         return left / right
-    except ZeroDivisionError:
+    except ZeroDivisionError, RuntimeWarning:
         return 0.0
 
 def getInputFile(fileName):
@@ -121,7 +125,7 @@ pset.addPrimitive(operator.not_, ["bool"], "bool")
 pset.addPrimitive(operator.add, ["float","float"], "float")
 pset.addPrimitive(operator.sub, ["float","float"], "float")
 pset.addPrimitive(operator.mul, ["float","float"], "float")
-pset.addPrimitive(safeDiv, ["float","float"], "float")
+#pset.addPrimitive(safeDiv, ["float","float"], "float")
 def if_then_else(input, output1, output2):
     if input: 
         return output1
@@ -162,17 +166,34 @@ def evaluate(individual):
     funcResult = 0
     alpha = 0.001
     regularization = 0.0
-    correct, total = 0.0, 0
+    correct = 0.0
+
+    result = [ kernelCalc(func,t) for t in instancesTraining ]
+    #print result[2], labelsTraining[2], result[2] == labelsTraining[2]
+    correct = sum( not (a ^ b) for (a, b) in zip(result, labelsTraining) )
+    total = len(instancesTraining)
 
     # simple should be class 0
-    resultsSimple = [ kernelCalc(func,t) for t in simpleFeatures]
-    correct += ( len(resultsSimple) - sum(resultsSimple) )
+    #resultsSimple = [ kernelCalc(func,t) for t in simpleFeatures]
+    #correct += ( len(resultsSimple) - sum(resultsSimple) )
 
     # en should be class 1
-    resultsEn = [ kernelCalc(func,t) for t in enFeatures]
-    correct += sum(resultsEn)
+    #resultsEn = [ kernelCalc(func,t) for t in enFeatures]
+    #correct += sum(resultsEn)
     
-    total = len(resultsEn) + len(resultsSimple)
+    #total = len(resultsEn) + len(resultsSimple)
+
+    fitness = (total - correct) / total # + alpha * (pow( len(individual), 2))
+    return fitness, len(individual)
+
+def finalTest(individual):
+    func = toolbox.lambdify(expr=individual)
+    correct = 0.0
+
+    result = [ kernelCalc(func,t) for t in instancesTest ]
+    #print result[2], labelsTraining[2], result[2] == labelsTraining[2]
+    correct = sum( not (a ^ b) for (a, b) in zip(result, labelsTest) )
+    total = len(instancesTest)
 
     fitness = (total - correct) / total # + alpha * (pow( len(individual), 2))
     return fitness, len(individual)
@@ -184,6 +205,7 @@ def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heigh
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
     toolbox.register("evaluate", evaluate)
+    toolbox.register("finalTest", finalTest)
     toolbox.register("select", tools.selTournament, tournsize=tournSize)
     toolbox.register("mate", staticLimitCrossover, heightLimit=heightLimit, toolbox=toolbox)
     toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)
@@ -208,12 +230,19 @@ def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heigh
     #print pop, stats, hof
     print stats, hof
     print "Fitness in training = ", map(toolbox.evaluate, hof)
-    #fitnessInTest  = map(toolbox.evaluate, hof)
-    #print "Fitness in test = %.4f" % ( fitnessInTest[0][0] * 100.0 )
+    fitnessInTest  = map(toolbox.finalTest, hof)
+    print "Fitness in test = %.4f" % ( fitnessInTest[0][0] * 100.0 )
     #return fitnessInTest[0][0]
     
 simpleFeatures = getInputFile("../readability/simpleMediaWiki.csv")
 enFeatures = getInputFile("../readability/enMediaWiki.csv")
+labels = len(simpleFeatures) * [0] + len(enFeatures) * [1] 
+features = simpleFeatures + enFeatures
+#print labels
+#print features
+instancesTraining, instancesTest, labelsTraining, labelsTest = train_test_split(features, labels, test_size=0.33, random_state=42)
+#print labelsTraining
+#print "Labels Test --> ", labelsTest , len(labelsTest), sum(labelsTest)
 
 if __name__ == "__main__":
 
