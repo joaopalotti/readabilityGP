@@ -5,7 +5,9 @@ from __future__ import division
 import sys, random, operator, math, csv, itertools
 from deap import algorithms, base, creator, tools, gp
 from optparse import OptionParser
+
 from sklearn.cross_validation import train_test_split
+from sklearn import metrics
 
 usingScoop = True
 #usingScoop = False
@@ -196,6 +198,9 @@ def finalTest(individual):
     total = len(instancesTest)
 
     fitness = (total - correct) / total # + alpha * (pow( len(individual), 2))
+    print "F1-score = ", metrics.f1_score(labelsTest, result)
+    print metrics.classification_report(labelsTest, result)
+
     return fitness, len(individual)
 
 def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heightMexNew, heightLimit):
