@@ -153,7 +153,7 @@ pset.addTerminal(1, "bool")
 #pset.addTerminal(1)
 #pset.addTerminal(0)
 
-creator.create("Fitness", base.Fitness, weights=(-1.0,-1.0))
+creator.create("Fitness", base.Fitness, weights=(1.0,-1.0))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.Fitness, pset=pset)
 
 toolbox = base.Toolbox()
@@ -163,29 +163,19 @@ if usingScoop:
     from scoop import futures
     toolbox.register("map", futures.map)
 
-def evaluate(individual):
+def evaluate(individual, metric_):
     func = toolbox.lambdify(expr=individual)
-    funcResult = 0
-    alpha = 0.001
-    regularization = 0.0
-    correct = 0.0
 
     result = [ kernelCalc(func,t) for t in instancesTraining ]
-    #print result[2], labelsTraining[2], result[2] == labelsTraining[2]
     correct = sum( not (a ^ b) for (a, b) in zip(result, labelsTraining) )
     total = len(instancesTraining)
 
-    # simple should be class 0
-    #resultsSimple = [ kernelCalc(func,t) for t in simpleFeatures]
-    #correct += ( len(resultsSimple) - sum(resultsSimple) )
+    if metric_ == "f1":
+        fitness = metrics.f1_score(labelsTraining, result)
 
-    # en should be class 1
-    #resultsEn = [ kernelCalc(func,t) for t in enFeatures]
-    #correct += sum(resultsEn)
-    
-    #total = len(resultsEn) + len(resultsSimple)
+    elif metric_ == "acc":
+        fitness = correct / total
 
-    fitness = (total - correct) / total # + alpha * (pow( len(individual), 2))
     return fitness, len(individual)
 
 def finalTest(individual):
@@ -198,18 +188,20 @@ def finalTest(individual):
     total = len(instancesTest)
 
     fitness = (total - correct) / total # + alpha * (pow( len(individual), 2))
+
+    print "Accuracy = ", correct / total
     print "F1-score = ", metrics.f1_score(labelsTest, result)
     print metrics.classification_report(labelsTest, result)
 
     return fitness, len(individual)
 
-def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heightMexNew, heightLimit):
+def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heightMexNew, heightLimit, metric):
 
     toolbox.register("expr", gp.genRamped, pset=pset, type_=pset.ret, min_=1, max_=2)
     toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", evaluate)
+    toolbox.register("evaluate", evaluate, metric_=metric)
     toolbox.register("finalTest", finalTest)
     toolbox.register("select", tools.selTournament, tournsize=tournSize)
     toolbox.register("mate", staticLimitCrossover, heightLimit=heightLimit, toolbox=toolbox)
@@ -264,6 +256,8 @@ if __name__ == "__main__":
     op.add_option("--hmc", action="store", type="int", dest="hcreation", help="Height for creation.", metavar="HEIGHT", default=5)
     op.add_option("--hnew", "-n", action="store", type="int", dest="hnew", help="Height max for creation.", metavar="HEIGHT", default=1)
     op.add_option("--hlim", "-l", action="store", type="int", dest="hlim", help="Height limit.", metavar="HEIGHT", default=30)
+    
+    op.add_option("--fitnessMetric", "-f", action="store", type="string", dest="fitnessMetric", help="Fitness Metric [f1, acc].", metavar="METRIC", default="acc")
     (opts, args) = op.parse_args()
     
     heightMaxCreation = 5
@@ -274,5 +268,5 @@ if __name__ == "__main__":
         op.error("this script takes no arguments.")
         sys.exit(1)
 
-    main(opts.ngen, opts.npop, opts.mutpb, opts.cxpb, opts.seed, opts.tsize, opts.hcreation, opts.hnew, opts.hlim)
+    main(opts.ngen, opts.npop, opts.mutpb, opts.cxpb, opts.seed, opts.tsize, opts.hcreation, opts.hnew, opts.hlim, opts.fitnessMetric)
 
