@@ -12,13 +12,33 @@ from sklearn import metrics
 usingScoop = True
 #usingScoop = False
 
+usingBasic = True
+#usingBasic = False
+
 '''
 The goal of this version is to separate the Simple English from the English Wikipedia as much as possible.
 '''
 
+def myF1(pred, labels):
+    N = len(pred)
+    TP, FP, FN, TN = 0, 0, 0, 0
+    for a, b in zip(pred, labels):
+        if a == b:
+            TP += 1
+    
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    acc = (TP + TN) / N
+    return 2.0 * precision * recall / (precision + recall)
+
+
 def kernelCalc(func, t):          
     
-    return func(t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7],t[8],t[9],t[10],t[11],t[12],t[13],t[14],t[15])
+    if usingBasic:
+        return func(t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7])
+    else:
+        return func(t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7],t[8],t[9],t[10],t[11],t[12],t[13],t[14],t[15])
+
     #return func(\
     #          t["numWords"],\
     #          t["numSentences"],\
@@ -94,7 +114,11 @@ def getInputFile(fileName):
 ## Create the fitness and individual classes
 # The second argument is the number of arguments used in the function
 
-pset = gp.PrimitiveSetTyped("MAIN", itertools.repeat("float", 16), "bool")
+if usingBasic:
+    pset = gp.PrimitiveSetTyped("MAIN", itertools.repeat("float", 8), "bool")
+else:
+    pset = gp.PrimitiveSetTyped("MAIN", itertools.repeat("float", 16), "bool")
+
 #pset = gp.PrimitiveSet("MAIN", 16)
 
 '''
@@ -187,10 +211,13 @@ def finalTest(individual):
     correct = sum( not (a ^ b) for (a, b) in zip(result, labelsTest) )
     total = len(instancesTest)
 
-    fitness = (total - correct) / total # + alpha * (pow( len(individual), 2))
+    fitness = (correct) / total # + alpha * (pow( len(individual), 2))
 
     print "Accuracy = ", correct / total
-    print "F1-score = ", metrics.f1_score(labelsTest, result)
+    print "Accuracy (scikit) = ", metrics.accuracy_score(labelsTest, result)
+    print "F1-score (micro)    = ", metrics.f1_score(labelsTest, result, average='micro')
+    print "F1-score (macro)    = ", metrics.f1_score(labelsTest, result, average='macro')
+    print "F1-score (weighted) = ", metrics.f1_score(labelsTest, result, average='weighted')
     print metrics.classification_report(labelsTest, result)
 
     return fitness, len(individual)
@@ -231,8 +258,13 @@ def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heigh
     print "Fitness in test = %.4f" % ( fitnessInTest[0][0] * 100.0 )
     #return fitnessInTest[0][0]
     
-simpleFeatures = getInputFile("../readability/simpleMediaWiki.csv")
-enFeatures = getInputFile("../readability/enMediaWiki.csv")
+if usingBasic:
+    simpleFeatures = getInputFile("../readability/simpleMediaWiki.basic.csv")
+    enFeatures = getInputFile("../readability/enMediaWiki.basic.csv")
+else:
+    simpleFeatures = getInputFile("../readability/simpleMediaWiki.csv")
+    enFeatures = getInputFile("../readability/enMediaWiki.csv")
+
 labels = len(simpleFeatures) * [0] + len(enFeatures) * [1] 
 features = simpleFeatures + enFeatures
 #print labels
