@@ -7,36 +7,28 @@ import re, string, math
 from myHyphernator import myHyphernator
 from nltk import word_tokenize, wordpunct_tokenize
 
+from myText import MyText
+
 '''
 ''Class myWikiText:
-''  int getNumberOfSentences
-''  int getNumberOfWords
 '''
 
-class MyWikiText:
+class MyWikiText(MyText):
     
-    #self.__sentences = []
+    #self.sentences = []
     #self.__data = []
 
     def __init__(self, rawData):
-        self.__raw = rawData
+        super(MyWikiText, self).__init__(rawData)
         
         #self.__tokens = self.__tokenize()
         self.__sectionsNames = self.__makeSections()
         self.__makeParagraphs()
         self.__makeSentences()
         self.__makeWords()
-        self.__myHyp = myHyphernator()
         
-        with open("dale-challWordList.txt", "r") as d:
-            dWords = d.readlines()
-        self.__daleWords = [ w.strip() for w in dWords]
- 
-    def validDocument(self):
-        return self.getNumberOfWords() > 0
-
     def __tokenize(self):
-        self.__tokens = nltk.word_tokenize(self.__raw)
+        self.__tokens = nltk.word_tokenize(self.raw)
         openSection = False
         strSaved = ""
         initialT = -1
@@ -65,18 +57,6 @@ class MyWikiText:
             del self.__tokens[t]
         print self.__tokens
 
-    def words(self):
-        return self.__words
-
-    def getNumberOfWords(self):
-        return len( [w for w in self.__words if w not in string.punctuation] )
-
-    def getNumberOfSyllables(self):
-        return sum ( [self.__myHyp.numberOfSyllables(w) for w in self.__words if w not in string.punctuation] )
-
-    def sentences(self):
-        return self.__sentences
-    
     def paragraphs(self):
         return self.__paragraphs
 
@@ -87,7 +67,7 @@ class MyWikiText:
         return self.__sectionsNames
 
     def __makeWords(self):
-        self.__words = []
+        self.words = []
         paragraphCounter = -1
         senCounter = -1
         for sec in range(len(self.__sections)):
@@ -108,9 +88,9 @@ class MyWikiText:
 
                     
                     senCounter += 1
-                    self.__words += tokens[:]
+                    self.words += tokens[:]
                     tokensInParagraph += tokens[:]
-                    self.__sentences[senCounter] = tokens[:]
+                    self.sentences[senCounter] = tokens[:]
                     self.__sections[sec][par][sen] = tokens 
                 
                 if tokensInParagraph:
@@ -118,7 +98,7 @@ class MyWikiText:
                     self.__paragraphs[paragraphCounter] = tokensInParagraph
 
     def __makeSentences(self):
-        self.__sentences = []
+        self.sentences = []
         paragraphCounter = -1
         
         # Change section object
@@ -128,7 +108,7 @@ class MyWikiText:
                 sentences = [sen.strip() for sen in re.split("\n|\.", self.__sections[sec][par]) if len(sen.strip()) > 0] #TODO: implement a better way to separate sentences
                 if sentences:
                     paragraphCounter += 1
-                    self.__sentences += sentences[:]
+                    self.sentences += sentences[:]
                     self.__paragraphs[paragraphCounter] = sentences[:]
                     self.__sections[sec][par] = sentences[:]
  
@@ -141,7 +121,7 @@ class MyWikiText:
                 self.__sections[s] = innerParagraphs[:]
 
     def __makeSections(self):
-        sectionDivision = self.__raw.split("\n=&=")
+        sectionDivision = self.raw.split("\n=&=")
        
         #Add first nameless section
         self.__sections = [ sectionDivision[0] ] 
@@ -153,79 +133,4 @@ class MyWikiText:
             sectionsNames.append(sectionName)
         
         return sectionsNames
-
-    def getNumberOfSentences(self):
-        return len(self.__sentences)
-
-    def getAvgSentenceLengthInChars(self):
-        #all words
-        #return sum( [ len(sen) for sen in self.__sentences for w in sen if w not in string.punctuation ] ) / len(self.__sentences)
-        # excluding punctuation
-        
-        if self.getNumberOfSentences() == 0:
-            return 0.0
-        return sum( [len(w) for sen in self.__sentences for w in sen if w not in string.punctuation ] ) / len(self.__sentences)
-    
-#    def getAvgSentenceLengthInSyllables(self):
-#        return sum( [self.__myHyp.numberOfSyllables(w) for sen in self.__sentences for w in sen if w not in string.punctuation ] ) / len(self.__sentences)
-### equal to - > avgSyllablesPerSentence = numSyllables / numSentences
-
-    def getAvgWordLengthInChars(self):
-        if self.getNumberOfWords() == 0:
-            return 0.0
-        nonPunctationWords =  [len(w) for w in self.__words if w not in string.punctuation]
-        return sum(nonPunctationWords) / len(nonPunctationWords)
-
-    def getAvgWordLengthInSyllables(self):
-        if self.getNumberOfWords() == 0:
-            return 0.0
-        nonPunctationWords =  [self.__myHyp.numberOfSyllables(w) for w in self.__words if w not in string.punctuation]
-        return sum(nonPunctationWords) / len(nonPunctationWords)
-
-    def getFleschReadingEase(self):
-        if self.getNumberOfSentences() == 0:
-            return 0.0
-        return 206.835 - 1.015 * ( self.getNumberOfWords() / self.getNumberOfSentences() ) - 85.6 * ( self.getNumberOfSyllables()/  self.getNumberOfWords() )
-
-    def getFleschKincaidGradeLevel(self):
-        if self.getNumberOfSentences() == 0:
-            return 0.0
-        return 0.39 * ( self.getNumberOfWords() / self.getNumberOfSentences() ) + 11.8 * ( self.getNumberOfSyllables() / self.getNumberOfWords() ) - 15.59
-
-    def getColemanLiauIndex(self):
-        if self.getNumberOfSentences() == 0:
-            return 0.0
-        return ( 5.89 * self.getAvgWordLengthInChars() ) - ( 30.0 * ( self.getNumberOfSentences() / self.getNumberOfWords() ) ) -15.8
-
-    def getLIX(self):
-        if self.getNumberOfSentences() == 0:
-            return 0.0
-        longWords = len ( [ w for w in self.__words if len(w) >= 7 ] )
-        return self.getNumberOfWords() / self.getNumberOfSentences() + ( (100.0 * longWords) / self.getNumberOfWords() )
-    
-    def getNumberOfPolysyllableWords(self):
-        return len( [w for w in self.__words if w not in string.punctuation and self.__myHyp.numberOfSyllables(w) >= 3] )
-
-    def getGFI(self):
-        # http://en.wikipedia.org/wiki/Gunning_fog_index
-        return 0.4 * ( (self.getNumberOfWords() / self.getNumberOfSentences()) + 100 * ( self.getNumberOfPolysyllableWords() / self.getNumberOfWords()))
-                     
-    def getSMOG(self):
-        # http://en.wikipedia.org/wiki/SMOG 
-        return 1.0430 * math.sqrt( self.getNumberOfPolysyllableWords() * 30 / self.getNumberOfSentences() ) + 3.1291
-    
-    def getARI(self):
-        # http://en.wikipedia.org/wiki/Automated_Readability_Index 
-        return 4.71 * (self.getAvgWordLengthInChars()) + 0.5 * (self.getNumberOfWords()/self.getNumberOfSentences())- 21.43
-
-    def getNumberOfChars(self):
-        nonPunctationWords =  [len(w) for w in self.__words if w not in string.punctuation]
-        return sum(nonPunctationWords)
-    
-    def getNumberOfNDCDifficultWords(self):
-        return len( [w for w in self.__words if w not in string.punctuation and w not in self.__daleWords ] )
-
-    def getNDC(self):
-        # http://en.wikipedia.org/wiki/Dale%E2%80%93Chall_readability_formula
-        return 0.1579 * ( self.getNumberOfNDCDifficultWords() / self.getNumberOfWords() * 100) + 0.0496 * ( self.getNumberOfWords() / self.getNumberOfSentences() )
 

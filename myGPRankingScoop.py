@@ -149,6 +149,7 @@ def myEphemeral():
     return random.random() * 10
 
 pset.addPrimitive(safeDiv, 2)
+pset.addPrimitive(operator.neg, 1)
 pset.addPrimitive(operator.add, 2)
 pset.addPrimitive(operator.mul, 2)
 pset.addPrimitive(operator.sub, 2)
@@ -270,7 +271,8 @@ def main(argv=None):
     stats.register("min", min)
     stats.register("max", max)
 
-    algorithms.eaSimple(pop, toolbox, cxpb, mutpb, ngen, stats, halloffame=hof)
+    #algorithms.eaSimple(pop, toolbox, cxpb, mutpb, ngen, stats, halloffame=hof)
+    algorithms.eaMuPlusLambda(pop, toolbox, npop, npop + 50, cxpb, mutpb, ngen, stats, halloffame=hof)
     
     #print pop, stats, hof
     print stats, hof
