@@ -5,21 +5,29 @@
 #### It only classifies the instances into TRUE or FALSE.
 
 from __future__ import division
+
 import sys, random, operator, math, csv, itertools
+
 from deap import algorithms, base, creator, tools, gp
 from optparse import OptionParser
 
 from sklearn.cross_validation import train_test_split
 from sklearn import metrics
 
+sys.path.append('../readability')
+from auxiliarFunctions import loadCSVFile, process 
+
 op = OptionParser(version="%prog 0.002")
 #General Configuration
-op.add_option("--useScoop", "-u", action="store_true", dest="useScoop", help="Set if you want to run parallel code using scoop.", default=False)
+op.add_option("--useScoop", "-o", action="store_true", dest="useScoop", help="Set if you want to run parallel code using scoop.", default=False)
 
 #Dataset Parameters
 op.add_option("--useBasic", "-b", action="store_true", dest="useBasic", help="Set if you want to use only the 8 basic features.", default=False)
 #op.add_option("--simple", "-s", action="store", type="string", dest="simpleFileName", help="File Name for the Simple English Wikipedia Dataset.", metavar="FILE")
 #op.add_option("--en", "-e", action="store", type="string", dest="enFileName", help="File Name for the English Wikipedia Dataset.", metavar="FILE")
+op.add_option("--keepDuplicate", "-d", action="store_false", dest="removeDuplicates", help="Set it if you DONT want to remove duplicates", default=True)
+op.add_option("--keepEmpty", "-k", action="store_false", dest="removeEmpty", help="Set it if you DONT want to remove empty", default=True)
+op.add_option("--useIntersection", "-u", action="store_true", dest="useIntersection", help="Set it if you WANT to use ONLY the intersection of articles that appear in both collections.", default=False)
 
 #GP parameters
 op.add_option("--gen", "-g", action="store", type="int", dest="ngen", help="Number of generations.", metavar="GEN", default=50)
@@ -40,6 +48,9 @@ if len(args) > 0:
 
 usingScoop = opts.useScoop
 usingBasic = opts.useBasic
+removeDuplicates = opts.removeDuplicates
+removeEmpty = opts.removeEmpty
+onlyIntersection = opts.useIntersection
 
 '''
 The goal of this version is to separate the Simple English from the English Wikipedia as much as possible.
@@ -286,14 +297,17 @@ def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heigh
     #return fitnessInTest[0][0]
     
 if usingBasic:
-    simpleFeatures = getInputFile("../readability/simpleMediaWiki.basic.csv")
-    enFeatures = getInputFile("../readability/enMediaWiki.basic.csv")
+    simpleDict = loadCSVFile("../readability/simpleMediaWiki.basic.csv")
+    enDict = loadCSVFile("../readability/enMediaWiki.basic.csv")
+    enFeatures, enY, simpleFeatures, simpleY = process(enDict, simpleDict, 1, 0, removeDuplicates, removeEmpty, onlyIntersection)
 else:
-    simpleFeatures = getInputFile("../readability/simpleMediaWiki.csv")
-    enFeatures = getInputFile("../readability/enMediaWiki.csv")
+    simpleDict = loadCSVFile("../readability/simpleMediaWiki.csv")
+    enDict = loadCSVFile("../readability/enMediaWiki.csv")
+    enFeatures, enY, simpleFeatures, simpleY = process(enDict, simpleDict, 1, 0, removeDuplicates, removeEmpty, onlyIntersection)
 
-labels = len(simpleFeatures) * [0] + len(enFeatures) * [1] 
+labels = simpleY + enY
 features = simpleFeatures + enFeatures
+#print features
 #print labels
 #print features
 instancesTraining, instancesTest, labelsTraining, labelsTest = train_test_split(features, labels, test_size=0.33, random_state=42)
