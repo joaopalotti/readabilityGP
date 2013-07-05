@@ -8,12 +8,12 @@ import operator
 from deap import algorithms, base, creator, tools, gp
 import math
 
-cxpb = 0.8
+cxpb = 0.7
 mutpb = 0.1 
-ngen = 40
-npop = 40
-tournSize = 7 #int(npop / 100)
-heightMaxCreation = 3
+ngen = 200
+npop = 1000
+tournSize = 30 #int(npop / 100)
+heightMaxCreation = 7
 heightMaxNew = 2
 heightLimit = 30
 usingScoop = True
@@ -145,15 +145,19 @@ pset = gp.PrimitiveSet("MAIN", 10 + 8)
     Arg17  => newDaleChall
 '''
 
-def myEphemeral():
+def myEphemeral10():
     return random.random() * 10
+
+def myEphemeral():
+    return random.random()
 
 pset.addPrimitive(safeDiv, 2)
 pset.addPrimitive(operator.add, 2)
 pset.addPrimitive(operator.mul, 2)
 pset.addPrimitive(operator.sub, 2)
+pset.addEphemeralConstant(myEphemeral10)
 pset.addEphemeralConstant(myEphemeral)
-#    pset.addTerminal(1)
+pset.addTerminal(1)
 #    pset.addTerminal(0)
 
 creator.create("Fitness", base.Fitness, weights=(1.0,))

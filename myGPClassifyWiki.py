@@ -140,8 +140,8 @@ def main(argv=None):
  
     cxpb = 0.8
     mutpb = 0.1 
-    ngen = 10
-    npop = 10
+    ngen = 1000
+    npop = 500
     tournSize = 2 #int(npop / 100)
     heightMaxCreation = 5
     heightMaxNew = 1

@@ -124,19 +124,10 @@ pset.addEphemeralConstant(myEphemeral)
 #    pset.addTerminal(1)
 #    pset.addTerminal(0)
 
-
-tournSize = 2 #int(npop / 100)
-heightMaxCreation = 5
-heightMaxNew = 1
-heightLimit = 30
-
-creator.create("Fitness", base.Fitness, weights=(-1.0,))
+creator.create("Fitness", base.Fitness, weights=(-1.0,-1.0))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.Fitness, pset=pset)
 
 toolbox = base.Toolbox()
-toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=heightMaxNew)
-toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("lambdify", gp.lambdify, pset=pset)
 
 if usingScoop:
@@ -162,25 +153,20 @@ def evaluate(individual):
             correct += 1
         total += 1
   
-    fitness = (total - correct) / total
-    return fitness,
+    fitness = (total - correct) / total # + alpha * (pow( len(individual), 2))
+    return fitness, len(individual)
 
+def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heightMexNew, heightLimit):
 
-toolbox.register("evaluate", evaluate)
-#toolbox.register("evaluateTest", evaluateTest)
-toolbox.register("select", tools.selTournament, tournsize=tournSize)
-#toolbox.register("select", cTools.selNSGA2)
-
-#Crossover
-#toolbox.register("mate", gp.cxOnePoint)
-toolbox.register("mate", staticLimitCrossover, heightLimit=heightLimit, toolbox=toolbox)
-#Mutation
-toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)
-toolbox.register("mutate", staticLimitMutation, expr=toolbox.expr_mut, heightLimit=heightLimit, toolbox=toolbox)
-
-
-def main(ngen, npop, mutpb, cxpb, seedValue):
-
+    toolbox.register("evaluate", evaluate)
+    toolbox.register("select", tools.selTournament, tournsize=tournSize)
+    toolbox.register("mate", staticLimitCrossover, heightLimit=heightLimit, toolbox=toolbox)
+    toolbox.register("expr_mut", gp.genGrow, min_=0, max_=heightMaxNew)
+    toolbox.register("mutate", staticLimitMutation, expr=toolbox.expr_mut, heightLimit=heightLimit, toolbox=toolbox)
+    toolbox.register("expr", gp.genRamped, pset=pset, min_=0, max_=heightMaxNew)
+    toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.expr)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+ 
     #here starts the algorithm
     random.seed(seedValue)
     pop = toolbox.population(n=npop)
@@ -203,6 +189,7 @@ def main(ngen, npop, mutpb, cxpb, seedValue):
     
 simpleFeatures = getInputFile("../readability/simpleMediaWiki.csv")
 enFeatures = getInputFile("../readability/enMediaWiki.csv")
+
 if __name__ == "__main__":
 
     op = OptionParser(version="%prog 0.001")
@@ -213,11 +200,20 @@ if __name__ == "__main__":
     op.add_option("--mutb", "-m", action="store", type="float", dest="mutpb", help="Probability of multation.", metavar="PROB", default=0.10)
     op.add_option("--cxpb", "-c", action="store", type="float", dest="cxpb", help="Probability of crossover.", metavar="PROB", default=0.90)
     op.add_option("--seed", "-s", action="store", type="int", dest="seed", help="Random Seed.", metavar="SEED", default=29)
+    op.add_option("--tsize", "-t", action="store", type="int", dest="tsize", help="Tournament Size.", metavar="TSIZE", default=2)
+    
+    op.add_option("--hmc", action="store", type="int", dest="hcreation", help="Height for creation.", metavar="HEIGHT", default=5)
+    op.add_option("--hnew", "-n", action="store", type="int", dest="hnew", help="Height max for creation.", metavar="HEIGHT", default=1)
+    op.add_option("--hlim", "-l", action="store", type="int", dest="hlim", help="Height limit.", metavar="HEIGHT", default=30)
     (opts, args) = op.parse_args()
+    
+    heightMaxCreation = 5
+    heightMaxNew = 1
+    heightLimit = 30
     
     if len(args) > 0:
         op.error("this script takes no arguments.")
         sys.exit(1)
 
-    main(opts.ngen, opts.npop, opts.mutpb, opts.cxpb, opts.seed)
+    main(opts.ngen, opts.npop, opts.mutpb, opts.cxpb, opts.seed, opts.tsize, opts.hcreation, opts.hnew, opts.hlim)
 

@@ -106,7 +106,8 @@ def getInputFile(fileName):
     file = open(fileName,"rb")
     reader = csv.reader(file, delimiter=',', quotechar ='"', escapechar='\\', doublequote=False)
     
-    featureList = [ [ float(element.strip()) for element in line ] for line in reader ]
+    #Ignoring the filename (line[0])
+    featureList = [ [ float(element.strip()) for element in line[1:] ] for line in reader ]
     
     print "len list = ", len(featureList)
     return featureList
@@ -250,6 +251,8 @@ def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heigh
 
     algorithms.eaSimple(pop, toolbox, cxpb, mutpb, ngen, stats, halloffame=hof)
     #algorithms.eaMuPlusLambda(pop, toolbox, npop, npop + 50, cxpb, mutpb, ngen, stats, halloffame=hof)
+
+    #TODO: add baseline and comparison to it
 
     #print pop, stats, hof
     print stats, hof
