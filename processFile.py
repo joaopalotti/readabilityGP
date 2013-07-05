@@ -139,42 +139,44 @@ def processFile(title, dataDir="MathWebpageCorpus", outputFile=sys.stdout, goal=
         print title , " IS NOT VALID!!!!!!"
         return
         
-    fleishReadingEase        = myTextObj.getFleschReadingEase()
-    fleschKincaidGradeLevel  = myTextObj.getFleschKincaidGradeLevel()
-    colemanLiauIndex         = myTextObj.getColemanLiauIndex()
-    lixIndex                 = myTextObj.getLIX()
+    fleishReadingEase           = myTextObj.getFleschReadingEase()
+    fleschKincaidGradeLevel     = myTextObj.getFleschKincaidGradeLevel()
+    colemanLiauIndex            = myTextObj.getColemanLiauIndex()
+    lixIndex                    = myTextObj.getLIX()
 
     # Syllables
-    numSyllables             = myTextObj.getNumberOfSyllables()
+    numSyllables                = myTextObj.getNumberOfSyllables()
     
     # Words
-    numWords                 = myTextObj.getNumberOfWords()
-    avgWordLengthInChars     = myTextObj.getAvgWordLengthInChars()
-    avgWordLengthSyl         = myTextObj.getAvgWordLengthInSyllables()
+    numWords                    = myTextObj.getNumberOfWords()
+    avgWordLengthInChars        = myTextObj.getAvgWordLengthInChars()
+    avgWordLengthSyl            = myTextObj.getAvgWordLengthInSyllables()
     
     # Sentences
-    numSentences             = myTextObj.getNumberOfSentences()
-    avgSenLengthInChars      = myTextObj.getAvgSentenceLengthInChars()
+    numSentences                = myTextObj.getNumberOfSentences()
+    avgSenLengthInChars         = myTextObj.getAvgSentenceLengthInChars()
 
     # Combined
-    avgWordsPerSentece       = numWords / numSentences
-    avgSyllablesPerSentence  = numSyllables / numSentences
+    avgWordsPerSentece          = numWords / numSentences
+    avgSyllablesPerSentence     = numSyllables / numSentences
 
-    numberOfPolysyllableWord = myTextObj.getNumberOfPolysyllableWords()
-    numberOfChars            = myTextObj.getNumberOfChars()
+    percentOfPolysyllableWord   = myTextObj.getPercentageOfPolysyllableWords()
+    percentOfMonosyllables      = myTextObj.getPercentageOfMonosyllables()
+    numberOfChars               = myTextObj.getNumberOfChars()
 
-    gunningFogIndex          = myTextObj.getGFI()
-    SMOG                     = myTextObj.getSMOG()
-    ARI                      = myTextObj.getARI()
-    newDaleChall             = myTextObj.getNDC()
+    gunningFogIndex             = myTextObj.getGFI()
+    SMOG                        = myTextObj.getSMOG()
+    ARI                         = myTextObj.getARI()
+    newDaleChall                = myTextObj.getNDC()
 
 
     #outputFile.write("%s,,,%.3f,,,%.3f,,,%.3f\n" % (title,\
-    outputFile.write("%s,,,%d,,,%d,,,%d,,,%d,,,%d,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f\n" % (title,\
+    outputFile.write("%s,,,%d,,,%d,,,%d,,,%.3f,,,%.3f,,,%d,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f,,,%.3f\n" % (title,\
                                                             numWords,\
                                                             numSentences,\
                                                             numSyllables,\
-                                                            numberOfPolysyllableWord,\
+                                                            percentOfPolysyllableWord,\
+                                                            percentOfMonosyllables,\
                                                             numberOfChars,\
                                                             avgWordLengthSyl,\
                                                             avgWordLengthInChars,\
@@ -192,4 +194,29 @@ def processFile(title, dataDir="MathWebpageCorpus", outputFile=sys.stdout, goal=
                                                             goal))
 
     return myTextObj        
+
+def printLabels(fo):
+    fo.write("%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s\n" % ("filename",\
+            "numWords",\
+            "numSentences",\
+            "numSyllables",\
+            "percentageOfPolysyllableWord",\
+            "percentageOfMonosyllableWord",\
+            "numberOfChars",\
+            "avgWordLengthSyl",\
+            "avgWordLengthInChars",\
+            "avgSenLengthInChars",\
+            "avgWordsPerSentece",\
+            "avgSyllablesPerSentence",\
+            "fleschReadingEase",\
+            "fleschKincaidGradeLevel",\
+            "colemanLiauIndex",\
+            "lixIndex",\
+            "gunningFogIndex",\
+            "SMOG",\
+            "ARI",\
+            "newDaleChall",\
+            "goal"))
+
+
 

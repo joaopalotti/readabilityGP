@@ -18,28 +18,8 @@ if __name__ == "__main__":
         outFileName = re.sub("/","",path)
         fo = open(outFileName + ".out", "w")
         print "Writing %s.out" % (outFileName)
-
-        fo.write("%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s\n" % ("filename",\
-            "numWords",\
-            "numSentences",\
-            "numSyllables",\
-            "numberOfPolysyllableWord",\
-            "numberOfChars",\
-            "avgWordLengthSyl",\
-            "avgWordLengthInChars",\
-            "avgSenLengthInChars",\
-            "avgWordsPerSentece",\
-            "avgSyllablesPerSentence",\
-            "fleschReadingEase",\
-            "fleschKincaidGradeLevel",\
-            "colemanLiauIndex",\
-            "lixIndex",\
-            "gunningFogIndex",\
-            "SMOG",\
-            "ARI",\
-            "newDaleChall",\
-            "goal"))
-
+        
+        printLabels(fo)
 
         for title in os.listdir(dataDir):
         #   print title

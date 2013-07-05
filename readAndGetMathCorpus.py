@@ -101,28 +101,9 @@ if __name__ == "__main__":
     dataDir = "MathWebpageCorpus"
     outFileName = "MathWebpage"
     fo = open( outFileName + ".out", "w")
-    fo.write("%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s,,,%s\n" % ("filename",\
-            "numWords",\
-            "numSentences",\
-            "numSyllables",\
-            "numberOfPolysyllableWord",\
-            "numberOfChars",\
-            "avgWordLengthSyl",\
-            "avgWordLengthInChars",\
-            "avgSenLengthInChars",\
-            "avgWordsPerSentece",\
-            "avgSyllablesPerSentence",\
-            "fleschReadingEase",\
-            "fleschKincaidGradeLevel",\
-            "colemanLiauIndex",\
-            "lixIndex",\
-            "gunningFogIndex",\
-            "SMOG",\
-            "ARI",\
-            "newDaleChall",\
-            "goal"))
-
-    xmldoc = minidom.parse('MathWebpageCorpus.xml')
+    printLabels(fo)
+    
+       xmldoc = minidom.parse('MathWebpageCorpus.xml')
     itemlist = xmldoc.getElementsByTagName('item') 
     
     allTokensSet = set()
