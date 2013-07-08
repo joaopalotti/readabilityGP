@@ -17,14 +17,14 @@ from sklearn import metrics
 sys.path.append('../readability')
 from auxiliarFunctions import loadCSVFile, process 
 
-op = OptionParser(version="%prog 0.002")
+op = OptionParser(version="%prog 0.003")
 #General Configuration
 op.add_option("--useScoop", "-o", action="store_true", dest="useScoop", help="Set if you want to run parallel code using scoop.", default=False)
 
 #Dataset Parameters
-op.add_option("--useBasic", "-b", action="store_true", dest="useBasic", help="Set if you want to use only the 8 basic features.", default=False)
 #op.add_option("--simple", "-s", action="store", type="string", dest="simpleFileName", help="File Name for the Simple English Wikipedia Dataset.", metavar="FILE")
 #op.add_option("--en", "-e", action="store", type="string", dest="enFileName", help="File Name for the English Wikipedia Dataset.", metavar="FILE")
+op.add_option("--useDataSet", "-b", action="store", dest="useDataSet", help="Set the type of dataset to use [all|basic|v3].", default="v3", metavar="TYPE")
 op.add_option("--keepDuplicate", "-d", action="store_false", dest="removeDuplicates", help="Set it if you DONT want to remove duplicates", default=True)
 op.add_option("--keepEmpty", "-k", action="store_false", dest="removeEmpty", help="Set it if you DONT want to remove empty", default=True)
 op.add_option("--useIntersection", "-u", action="store_true", dest="useIntersection", help="Set it if you WANT to use ONLY the intersection of articles that appear in both collections.", default=False)
@@ -47,7 +47,6 @@ if len(args) > 0:
     sys.exit(1)
 
 usingScoop = opts.useScoop
-usingBasic = opts.useBasic
 removeDuplicates = opts.removeDuplicates
 removeEmpty = opts.removeEmpty
 onlyIntersection = opts.useIntersection
@@ -71,10 +70,12 @@ def myF1(pred, labels):
 
 def kernelCalc(func, t):          
     
-    if usingBasic:
+    if opts.useDataSet == "basic":
         return func(t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7])
-    else:
+    elif opts.useDataSet == "all":
         return func(t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7],t[8],t[9],t[10],t[11],t[12],t[13],t[14],t[15])
+    elif opts.useDataSet == "v3":
+        return func(t[0],t[1],t[2],t[3],t[4],t[5],t[6],t[7],t[8])
 
     #return func(\
     #          t["numWords"],\
@@ -152,10 +153,12 @@ def getInputFile(fileName):
 ## Create the fitness and individual classes
 # The second argument is the number of arguments used in the function
 
-if usingBasic:
+if opts.useDataSet == "basic":
     pset = gp.PrimitiveSetTyped("MAIN", itertools.repeat("float", 8), "bool")
-else:
+elif opts.useDataSet == "all":
     pset = gp.PrimitiveSetTyped("MAIN", itertools.repeat("float", 16), "bool")
+elif opts.useDataSet == "v3":
+    pset = gp.PrimitiveSetTyped("MAIN", itertools.repeat("float", 9), "bool")
 
 #pset = gp.PrimitiveSet("MAIN", 16)
 
@@ -199,21 +202,12 @@ pset.addPrimitive(operator.lt, ["float", "float"], "bool")
 pset.addPrimitive(operator.eq, ["float", "float"], "bool")
 pset.addPrimitive(if_then_else, ["bool", "float", "float"], "float")
 
-#pset.addPrimitive(safeDiv, 2)
-#pset.addPrimitive(operator.add, 2)
-#pset.addPrimitive(operator.mul, 2)
-#pset.addPrimitive(operator.sub, 2)
-
 def myEphemeral():
     return random.random()
 
 pset.addEphemeralConstant(myEphemeral, "float")
 pset.addTerminal(0, "bool")
 pset.addTerminal(1, "bool")
-
-#pset.addEphemeralConstant(myEphemeral)
-#pset.addTerminal(1)
-#pset.addTerminal(0)
 
 creator.create("Fitness", base.Fitness, weights=(1.0,-1.0))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.Fitness, pset=pset)
@@ -298,11 +292,17 @@ def main(ngen, npop, mutpb, cxpb, seedValue, tournSize, heightMaxCreation, heigh
     print "Fitness in test = %.4f" % ( fitnessInTest[0][0] * 100.0 )
     #return fitnessInTest[0][0]
     
-if usingBasic:
+if opts.useDataSet == "basic":
     simpleDict = loadCSVFile("../readability/simpleMediaWiki.basic.csv")
     enDict = loadCSVFile("../readability/enMediaWiki.basic.csv")
     enFeatures, enY, simpleFeatures, simpleY = process(enDict, simpleDict, 1, 0, removeDuplicates, removeEmpty, onlyIntersection)
-else:
+
+elif opts.useDataSet == "v3":
+    simpleDict = loadCSVFile("../readability/simpleMediaWiki.v3.csv")
+    enDict = loadCSVFile("../readability/enMediaWiki.v3.csv")
+    enFeatures, enY, simpleFeatures, simpleY = process(enDict, simpleDict, 1, 0, removeDuplicates, removeEmpty, onlyIntersection)
+
+elif opts.useDataSet == "all":
     simpleDict = loadCSVFile("../readability/simpleMediaWiki.csv")
     enDict = loadCSVFile("../readability/enMediaWiki.csv")
     enFeatures, enY, simpleFeatures, simpleY = process(enDict, simpleDict, 1, 0, removeDuplicates, removeEmpty, onlyIntersection)
